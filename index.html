@@ -45,7 +45,7 @@
       <div id="courtList" class="court-list"></div>
       <div class="availability-legend"><span><i class="legend-open"></i>Tersedia</span><span><i class="legend-booked"></i>Terisi</span><span class="muted">Permintaan booking menunggu konfirmasi pengelola.</span></div>
       <section id="booking-request" class="panel request-panel">
-        <div class="panel-heading"><div><span class="eyebrow">AJUKAN BOOKING</span><h2>Amankan slot pilihanmu</h2><p class="muted">Kirim permintaan booking. Pengelola akan mengonfirmasi jadwal dan pembayaran.</p></div></div>
+        <div class="panel-heading"><div><span class="eyebrow">BOOKING LAPANGAN</span><h2>Pilih slot yang kamu inginkan</h2><p class="muted">Kirim permintaan booking. Slot baru terkonfirmasi setelah pengelola menyetujui jadwal dan pembayaran.</p></div></div>
         <form id="requestBookingForm">
           <div class="form-grid">
             <label class="form-field">Pilih lapangan<select id="requestField" required><option value="">Memuat lapangan…</option></select></label>
@@ -55,7 +55,7 @@
             <label class="form-field form-field-full">Catatan (opsional)<input id="requestNotes" maxlength="500" placeholder="Jumlah pemain, permintaan khusus, dll."></label>
           </div>
           <p id="requestMessage" class="form-message" role="status"></p>
-          <button id="requestSubmit" class="button button-accent" type="submit">Ajukan booking →</button>
+          <button id="requestSubmit" class="button button-accent" type="submit">Kirim Permintaan Booking →</button>
         </form>
       </section>
     </section>
@@ -69,7 +69,7 @@
       <div id="sessionPreview" class="session-grid"><div class="notice">Memuat sesi…</div></div>
     </section>
   </main>
-  <footer class="footer"><div class="container footer-inner"><a class="brand" href="./index.html"><span class="brand-mark">F</span><span>FUTSAL<span class="brand-light">KITA</span></span></a><span>Temukan lapangan. Temukan lawan tanding.</span><a href="./login.html">Masuk akun ↗</a></div></footer>
+  <footer class="footer"><div class="container footer-inner"><a class="brand" href="./index.html"><span class="brand-mark">F</span><span>FUTSAL<span class="brand-light">KITA</span></span></a><span>Temukan lapangan. Temukan lawan tanding.</span><a href="./matchmaking.html">Cari lawan sparing ↗</a></div></footer>
 
   <script type="module">
     import { getFields, getPublicBookings, getMatchmakingSessions, requestBooking } from './js/api.js'
@@ -83,7 +83,7 @@
       if (session) {
         const { data: { user } } = await supabase.auth.getUser()
         const displayName = user?.user_metadata?.display_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Pemain'
-        $('userGreeting').textContent = `Halo, @${displayName}!`
+        $('userGreeting').textContent = `Halo, ${displayName}!`
         $('userGreeting').classList.remove('hidden')
         $('loginLink').classList.add('hidden')
         $('logoutButton').classList.remove('hidden')
@@ -112,7 +112,7 @@
           $('availabilityState').textContent = 'Belum ada lapangan yang ditambahkan. Pengelola perlu menambahkan lapangan di Supabase.'
           return
         }
-        $('availabilityState').textContent = 'Pilih waktu yang sesuai. Untuk membuat booking, hubungi pengelola lapangan.'
+        $('availabilityState').textContent = 'Pilih slot yang tersedia, lalu kirim permintaan booking. Jadwal menunggu konfirmasi pengelola.'
         for (const field of fields) {
           const card = document.createElement('article')
           card.className = 'court-card'
@@ -252,7 +252,7 @@
       }catch(error){
         message.textContent=error.message || 'Gagal mengirim permintaan booking.'
         message.className='form-message error'
-      }finally{button.disabled=false;button.textContent='Ajukan booking →'}
+      }finally{button.disabled=false;button.textContent='Kirim Permintaan Booking →'}
     })
     await Promise.all([loadAvailability(), loadSessions()])
   </script>
