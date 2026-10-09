@@ -32,6 +32,10 @@
     import { login, register, signInWithGoogle } from './js/auth.js'
     const $ = id => document.getElementById(id)
     let mode = 'login'
+    if (new URLSearchParams(window.location.search).get('verified') === '1') {
+      $('authMessage').textContent = 'Email kamu sudah terverifikasi. Login untuk mulai bermain di FutsalKita.'
+      $('authMessage').className = 'form-message success'
+    }
     function setMode(next) {
       mode = next
       $('tabLogin').classList.toggle('active', mode === 'login')
