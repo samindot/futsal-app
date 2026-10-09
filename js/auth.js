@@ -8,6 +8,10 @@ function getRedirectTarget() {
     : './matchmaking.html'
 }
 
+function getAbsoluteRedirectTarget() {
+  return new URL(getRedirectTarget(), window.location.href).href
+}
+
 export async function login(email, password) {
   const { error } = await supabase.auth.signInWithPassword({
     email: email.trim(),
@@ -18,10 +22,9 @@ export async function login(email, password) {
 }
 
 export async function signInWithGoogle() {
-  const redirectTo = new URL(getRedirectTarget(), window.location.href).href
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo }
+    options: { redirectTo: getAbsoluteRedirectTarget() }
   })
   if (error) throw error
 }
@@ -30,7 +33,10 @@ export async function register(email, password, displayName) {
   const { data, error } = await supabase.auth.signUp({
     email: email.trim(),
     password,
-    options: { data: { display_name: displayName.trim() } }
+    options: {
+      data: { display_name: displayName.trim() },
+      emailRedirectTo: getAbsoluteRedirectTarget()
+    }
   })
   if (error) throw error
   if (!data.session) {
