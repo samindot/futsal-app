@@ -13,7 +13,7 @@
     <div class="nav-links">
       <a href="#availability">Cek lapangan</a>
       <a href="./matchmaking.html">Cari teman main</a>
-      <a class="button button-small button-dark" href="./login.html">Login / Daftar</a>
+      <a id="loginLink" class="button button-small button-dark" href="./login.html">Login / Daftar</a><button id="logoutButton" class="button button-small button-outline hidden" type="button">Logout</button>
     </div>
   </nav>
 
@@ -74,7 +74,19 @@
   <script type="module">
     import { getFields, getPublicBookings, getMatchmakingSessions, requestBooking } from './js/api.js'
     import { supabase } from './js/supabase.js'
+    import { logout } from './js/auth.js'
     const $ = (id) => document.getElementById(id)
+    $('logoutButton').addEventListener('click', logout)
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession()
+      if (error) throw error
+      if (session) {
+        $('loginLink').classList.add('hidden')
+        $('logoutButton').classList.remove('hidden')
+      }
+    } catch (error) {
+      console.warn('Could not check current session', error)
+    }
     const localDate = (d = new Date()) => {
       const offset = d.getTimezoneOffset() * 60000
       return new Date(d.getTime() - offset).toISOString().slice(0, 10)
