@@ -169,6 +169,60 @@ begin
 end;
 $$;
 
+
+create or replace function public.request_booking(
+  p_field_id uuid,
+  p_date date,
+  p_start time,
+  p_duration integer,
+  p_customer_name text default null,
+  p_notes text default null
+)
+returns uuid language plpgsql security definer set search_path = ''
+as $
+declare
+  v_booking_id uuid;
+  v_customer_name text;
+begin
+  if (select auth.uid()) is null then raise exception 'Silakan login untuk mengajukan booking'; end if;
+  if p_date is null or p_date < current_date then raise exception 'Tanggal booking tidak boleh di masa lalu'; end if;
+  if p_start is null or p_start < time '08:00' or p_start >= time '24:00' then
+    raise exception 'Jam mulai harus antara 08:00 dan 23:00';
+  end if;
+  if p_duration is null or p_duration < 1 or p_duration > 8
+     or extract(epoch from p_start) + p_duration * 3600 > 86400 then
+    raise exception 'Durasi atau jam selesai tidak valid';
+  end if;
+  select nullif(trim(coalesce(p_customer_name, '')), '') into v_customer_name;
+  if v_customer_name is null then
+    select coalesce(nullif(trim(p.display_name), ''), split_part(coalesce(u.email, 'player'), '@', 1))
+      into v_customer_name
+    from public.profiles p join auth.users u on u.id = p.id
+    where p.id = (select auth.uid());
+  end if;
+  if v_customer_name is null then raise exception 'Nama pelanggan wajib diisi di profil atau formulir'; end if;
+
+  perform pg_advisory_xact_lock(hashtext(p_field_id::text), hashtext(p_date::text));
+  perform 1 from public.fields where id = p_field_id and is_active = true;
+  if not found then raise exception 'Lapangan tidak ditemukan atau tidak aktif'; end if;
+  if exists (
+    select 1 from public.bookings b
+    where b.field_id = p_field_id and b.booking_date = p_date and b.status <> 'cancelled'
+      and b.start_time < p_start + make_interval(hours => p_duration)
+      and b.start_time + make_interval(hours => b.duration_hours) > p_start
+  ) then raise exception 'Slot ini baru saja terisi. Silakan pilih jam lain'; end if;
+
+  insert into public.bookings (
+    field_id, booking_date, start_time, duration_hours, customer_name,
+    amount_paid, notes, status, created_by
+  ) values (
+    p_field_id, p_date, p_start, p_duration, v_customer_name,
+    0, nullif(trim(coalesce(p_notes, '')), ''), 'pending', (select auth.uid())
+  ) returning id into v_booking_id;
+  return v_booking_id;
+end;
+$;
+
 create or replace function public.get_public_bookings(p_date date)
 returns table (
   id uuid, field_id uuid, booking_date date, start_time time,
@@ -299,6 +353,7 @@ revoke insert, update, delete on public.matchmaking_players from anon, authentic
 
 grant execute on function public.is_admin() to anon, authenticated;
 grant execute on function public.create_booking(uuid,date,time,integer,numeric,text,text) to authenticated;
+grant execute on function public.request_booking(uuid,date,time,integer,text,text) to authenticated;
 grant execute on function public.get_public_bookings(date) to anon, authenticated;
 grant execute on function public.get_matchmaking_sessions() to anon, authenticated;
 grant execute on function public.join_matchmaking_session(uuid) to authenticated;
