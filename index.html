@@ -80,6 +80,7 @@
       return new Date(d.getTime() - offset).toISOString().slice(0, 10)
     }
     const dateInput = $('bookingDate')
+    let dayBookings = []
     dateInput.value = localDate()
     dateInput.min = localDate()
     const timeLabel = (time) => String(time).slice(0, 5)
@@ -89,7 +90,8 @@
       $('courtList').replaceChildren()
       try {
         const [fields, bookings] = await Promise.all([getFields(), getPublicBookings(dateInput.value)])
-        populateRequestForm(fields)
+        dayBookings = bookings
+        populateRequestForm(fields, bookings)
         if (!fields.length) {
           $('availabilityState').textContent = 'Belum ada lapangan yang ditambahkan. Pengelola perlu menambahkan lapangan di Supabase.'
           return
@@ -174,21 +176,41 @@
         root.append(message)
       }
     }
-    function populateRequestForm(fields) {
+    function populateRequestForm(fields, bookings) {
       const select=$('requestField'), previous=select.value
       select.replaceChildren()
       fields.forEach(field=>{
         const option=document.createElement('option'); option.value=field.id; option.textContent=field.name+' · '+money(field.hourly_rate)+'/jam'; select.append(option)
       })
       if (previous && fields.some(field=>field.id===previous)) select.value=previous
-      const start=$('requestStart'), oldStart=start.value
+      updateRequestStartOptions(bookings)
+    }
+    function updateRequestStartOptions(bookings=dayBookings) {
+      const start=$('requestStart'), previous=start.value
       start.replaceChildren()
+      const fieldId=$('requestField').value, duration=Number($('requestDuration').value)
+      let count=0
       for(let hour=8;hour<24;hour++){
-        const option=document.createElement('option'); option.value=String(hour).padStart(2,'0')+':00'; option.textContent=option.value; start.append(option)
+        if(hour+duration>24) continue
+        const overlap=(bookings||[]).some(b=>{
+          if(b.field_id!==fieldId) return false
+          const bookedStart=Number(String(b.start_time).slice(0,2))
+          const bookedEnd=bookedStart+Number(b.duration_hours)
+          return hour<bookedEnd && hour+duration>bookedStart
+        })
+        if(overlap) continue
+        const option=document.createElement('option'); option.value=String(hour).padStart(2,'0')+':00'; option.textContent=option.value; start.append(option); count++
       }
-      if(oldStart) start.value=oldStart
+      if(!count){
+        const option=document.createElement('option'); option.value=''; option.textContent='Tidak ada slot tersedia'; start.append(option); start.disabled=true
+      } else {
+        start.disabled=false
+        if(previous && [...start.options].some(option=>option.value===previous)) start.value=previous
+      }
     }
     dateInput.addEventListener('change', loadAvailability)
+    $('requestField').addEventListener('change', () => updateRequestStartOptions())
+    $('requestDuration').addEventListener('change', () => updateRequestStartOptions())
     $('requestBookingForm').addEventListener('submit',async event=>{
       event.preventDefault()
       const button=$('requestSubmit'); button.disabled=true; button.textContent='Mengirim…'
