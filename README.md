@@ -1,43 +1,74 @@
-# Futsal Booking + Matchmaking
+# FutsalKita — Booking Lapangan & Matchmaking
 
-Static frontend hosted on Cloudflare Pages; Supabase provides Auth and Postgres.
+A static HTML/ES-module frontend deployed on Cloudflare Pages, using Supabase Auth and Postgres.
 
-## Supabase setup
+## Features implemented in this branch
 
-1. Create a Supabase project.
-2. Open **SQL Editor** and run `supabase/migrations/001_initial_schema.sql`.
-3. In **Authentication → Users**, create your admin user (email/password).
-4. In SQL Editor, promote that account to admin by replacing the email below:
+- Public landing page with date-based court availability (only safe availability fields are exposed publicly).
+- Email/password registration and login.
+- Admin booking calendar with create booking, update customer/payment details, and change booking status.
+- Overlap checks for bookings in the database, including a transaction-level lock to reduce race conditions.
+- Public open-match discovery with level, venue, time, capacity, and join/leave actions.
+- Session creation for authenticated players; session creator counts toward capacity.
+- Row Level Security policies and security-definer RPCs for public availability and safe matchmaking counts.
+
+## 1. Set up Supabase
+
+1. Create the new Supabase project.
+2. Open **SQL Editor** and run the full contents of `supabase/migrations/001_initial_schema.sql` once.
+3. Open the deployed app (or run it locally on a static HTTP server) and use **Login / Daftar** to create your account. Complete email confirmation if Supabase requires it.
+4. In **Supabase → SQL Editor**, promote your account to admin by replacing the email below:
 
 ```sql
 update public.profiles p
 set role = 'admin'
 from auth.users u
 where p.id = u.id
-  and u.email = 'YOUR_ADMIN_EMAIL';
+  and lower(u.email) = lower('YOUR_ADMIN_EMAIL');
 ```
 
-5. Add one or more courts in SQL Editor (replace names, locations, and rates):
+5. Add the actual courts, venue names, and hourly rates. Replace the sample data:
 
 ```sql
 insert into public.fields (name, location, hourly_rate)
 values
-  ('Court 1', 'Your venue', 150000),
-  ('Court 2', 'Your venue', 150000);
+  ('Court 1', 'Your venue address', 150000),
+  ('Court 2', 'Your venue address', 150000);
 ```
 
-The frontend client in `js/supabase.js` uses only the project URL and publishable key. Never put a Supabase secret or `service_role` key in frontend code or GitHub.
+If you need to change the sample courts later, update or delete the rows in `public.fields` through SQL Editor.
 
-## Current database model
+The browser client in `js/supabase.js` contains only the project URL and publishable key. Never put a Supabase secret key or `service_role` key in frontend code or GitHub.
 
-- `profiles`: player profile and role.
-- `fields`: courts/fields and hourly rate.
-- `bookings`: admin-created bookings; overlapping active bookings are rejected by the database function.
-- `matchmaking_sessions`: player-created open-play sessions.
-- `matchmaking_players`: participation in matchmaking sessions.
+## 2. Cloudflare Pages
 
-Row Level Security is enabled. Create and test user accounts before opening the app publicly. The initial migration is the database foundation; the existing calendar UI still needs to be aligned with this schema, and the matchmaking UI/API is a subsequent implementation step.
+For this plain HTML/ES-module project:
 
-## Cloudflare Pages
+- Connect repository: `samindot/futsal-app`.
+- Production branch: `main` after the PR is reviewed and merged.
+- Build command: leave blank.
+- Build output directory: `/` (repository root).
+- No framework preset is required.
 
-For this plain HTML/ES-module project, connect the GitHub repository in Cloudflare Pages. Use the root directory, no build command, and `/` as the output directory. Deploy the working branch only after the Supabase migration has been applied and the frontend flows have been tested.
+The working branch is `rebuild/supabase-foundation`. The draft PR is available at https://github.com/samindot/futsal-app/pull/1. Do not promote it to production until the SQL migration has been applied and the end-to-end checklist below passes.
+
+## 3. Smoke-test checklist
+
+- [ ] SQL migration runs successfully in the new project.
+- [ ] Register a player account and confirm email if required.
+- [ ] Promote the intended admin account using the SQL above.
+- [ ] Insert the real fields and prices.
+- [ ] Public landing page shows the fields and availability for a selected date.
+- [ ] Admin can create a booking and overlapping booking attempts are rejected.
+- [ ] Admin can update payment amount/status and cancel a booking.
+- [ ] Player can create an open-match session, join, and leave.
+- [ ] Session capacity includes its host and does not exceed the configured maximum.
+- [ ] Non-admin users cannot open the admin booking calendar.
+- [ ] Test on mobile viewport and desktop.
+
+## Notes and current boundaries
+
+- Court reservations are currently created by admins; public users can see availability but do not yet submit a reservation request themselves.
+- Payment tracking is a simple amount-paid field, not a payment gateway.
+- Matchmaking is a player-organized session board, not an automated team-balancing algorithm or chat system.
+- This branch has not been tested against the live Supabase project yet. Apply the migration and complete the checklist before using real bookings.
