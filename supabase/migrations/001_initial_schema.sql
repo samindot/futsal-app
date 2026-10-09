@@ -293,13 +293,10 @@ using (
   or exists (select 1 from public.matchmaking_sessions s
     where s.id = session_id and s.host_id = (select auth.uid()))
 );
+-- Membership changes must go through the capacity-checking RPCs.
 drop policy if exists "Users join as themselves" on public.matchmaking_players;
-create policy "Users join as themselves" on public.matchmaking_players for insert to authenticated
-with check (player_id = (select auth.uid()));
 drop policy if exists "Users cancel own participation" on public.matchmaking_players;
-create policy "Users cancel own participation" on public.matchmaking_players for update to authenticated
-using (player_id = (select auth.uid()) or public.is_admin())
-with check (player_id = (select auth.uid()) or public.is_admin());
+revoke insert, update, delete on public.matchmaking_players from anon, authenticated;
 
 grant execute on function public.is_admin() to anon, authenticated;
 grant execute on function public.create_booking(uuid,date,time,integer,numeric,text,text) to authenticated;
