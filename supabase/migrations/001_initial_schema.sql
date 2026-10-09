@@ -66,6 +66,16 @@ create index if not exists matchmaking_sessions_date_idx
   where status in ('open','full');
 
 
+create table if not exists public.matchmaking_players (
+  id uuid primary key default gen_random_uuid(),
+  session_id uuid not null references public.matchmaking_sessions(id) on delete cascade,
+  player_id uuid not null references auth.users(id) on delete cascade,
+  status text not null default 'joined'
+    check (status in ('joined','waitlist','cancelled')),
+  created_at timestamptz not null default now(),
+  unique (session_id, player_id)
+);
+
 create or replace function public.add_host_to_session()
 returns trigger language plpgsql security definer set search_path = ''
 as $
@@ -80,17 +90,6 @@ drop trigger if exists on_matchmaking_session_created on public.matchmaking_sess
 create trigger on_matchmaking_session_created
 after insert on public.matchmaking_sessions
 for each row execute procedure public.add_host_to_session();
-
-
-create table if not exists public.matchmaking_players (
-  id uuid primary key default gen_random_uuid(),
-  session_id uuid not null references public.matchmaking_sessions(id) on delete cascade,
-  player_id uuid not null references auth.users(id) on delete cascade,
-  status text not null default 'joined'
-    check (status in ('joined','waitlist','cancelled')),
-  created_at timestamptz not null default now(),
-  unique (session_id, player_id)
-);
 
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = ''
