@@ -12,6 +12,10 @@ function getAbsoluteRedirectTarget() {
   return new URL(getRedirectTarget(), window.location.href).href
 }
 
+function getVerificationRedirect() {
+  return new URL('./verify.html', window.location.href).href
+}
+
 export async function login(email, password) {
   const { error } = await supabase.auth.signInWithPassword({
     email: email.trim(),
@@ -35,7 +39,7 @@ export async function register(email, password, displayName) {
     password,
     options: {
       data: { display_name: displayName.trim() },
-      emailRedirectTo: getAbsoluteRedirectTarget()
+      emailRedirectTo: getVerificationRedirect()
     }
   })
   if (error) throw error
