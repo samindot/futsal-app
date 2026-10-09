@@ -262,3 +262,9 @@ button:disabled { opacity: .58; cursor: not-allowed; }
   .session-actions { align-items: stretch; flex-direction: column; }
   .host-label { text-align: center; }
 }
+
+.request-panel { margin-top: 26px; }
+.request-panel .panel-heading { margin-bottom: 12px; }
+.request-panel .form-grid { margin-top: 18px; }
+.form-field-full { grid-column: 1 / -1; }
+@media (max-width: 680px) { .form-field-full { grid-column: auto; } }
