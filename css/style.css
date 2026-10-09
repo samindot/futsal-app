@@ -287,3 +287,8 @@ button:disabled { opacity: .58; cursor: not-allowed; }
 .verify-home-link { display: inline-block; margin-top: 18px; color: var(--green-dark); font-size: .88rem; font-weight: 700; }
 .verify-footnote { margin: 27px 0 0; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: .75rem; line-height: 1.6; }
 @media (max-width: 680px) { .verify-layout { min-height: calc(100vh - 70px); padding-top: 24px; padding-bottom: 40px; } .verify-card { padding: 30px 23px; } }
+
+
+/* Signed-in navbar greeting */
+.nav-greeting { color: var(--green-dark); font-size: .82rem; font-weight: 750; white-space: nowrap; }
+@media (max-width: 680px) { .nav-greeting { font-size: .72rem; } }
