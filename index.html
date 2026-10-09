@@ -1,38 +1,165 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10251d">
+  <title>Lapangan Futsal — Booking & Cari Teman Main</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
 <body>
-  <h2>Public Calendar</h2>
-  <a href="./login.html">Login</a>
+  <nav class="nav container">
+    <a class="brand" href="./index.html"><span class="brand-mark">F</span><span>FUTSAL<span class="brand-light">KITA</span></span></a>
+    <div class="nav-links">
+      <a href="#availability">Cek lapangan</a>
+      <a href="./matchmaking.html">Cari teman main</a>
+      <a class="button button-small button-dark" href="./login.html">Login / Daftar</a>
+    </div>
+  </nav>
 
-  <div id="calendar"></div>
+  <main>
+    <section class="hero container">
+      <div class="hero-copy">
+        <span class="eyebrow"><span class="pulse"></span> MAIN BARENG, LEBIH GAMPANG</span>
+        <h1>Lapangan siap.<br><span class="text-accent">Tim tinggal dicari.</span></h1>
+        <p>Temukan slot lapangan dan gabung sesi futsal bersama pemain lain. Semua dalam satu tempat.</p>
+        <div class="hero-actions">
+          <a class="button button-accent" href="#availability">Lihat ketersediaan <span aria-hidden="true">↗</span></a>
+          <a class="button button-outline" href="./matchmaking.html">Cari teman main</a>
+        </div>
+        <div class="hero-stats"><div><strong>01</strong><span>Cek jadwal</span></div><div><strong>02</strong><span>Pilih sesi</span></div><div><strong>03</strong><span>Gas main</span></div></div>
+      </div>
+      <div class="hero-art" aria-label="Ilustrasi lapangan futsal">
+        <div class="art-tag tag-top"><span class="tag-dot"></span> YOUR NEXT GAME</div>
+        <div class="court-art"><div class="court-mid"></div><div class="court-circle"></div><div class="court-box court-box-left"></div><div class="court-box court-box-right"></div><div class="court-goal court-goal-left"></div><div class="court-goal court-goal-right"></div></div>
+        <div class="art-card"><div class="avatar-stack"><span>⚽</span><span>⚡</span><span>＋</span></div><div><strong>Temukan timmu</strong><small>Mulai dari satu sesi</small></div><span class="art-arrow">↗</span></div>
+      </div>
+    </section>
+
+    <section class="section container" id="availability">
+      <div class="section-heading">
+        <div><span class="eyebrow">BOOKING LAPANGAN</span><h2>Cek slot yang tersedia</h2><p class="muted">Pilih tanggal untuk melihat jadwal lapangan. Slot hijau menandakan waktu tersedia.</p></div>
+        <label class="date-control"><span>Tanggal main</span><input id="bookingDate" type="date"></label>
+      </div>
+      <div id="availabilityState" class="notice">Memuat ketersediaan…</div>
+      <div id="courtList" class="court-list"></div>
+      <div class="availability-legend"><span><i class="legend-open"></i>Tersedia</span><span><i class="legend-booked"></i>Terisi</span><span class="muted">Booking publik perlu dikonfirmasi pengelola lapangan.</span></div>
+    </section>
+
+    <section class="match-strip">
+      <div class="container strip-inner"><div><span class="eyebrow">BELUM PUNYA TIM?</span><h2>Kurang pemain? Gabung aja.</h2><p>Buat sesi sendiri atau cari open match yang masih punya tempat.</p></div><a class="button button-accent" href="./matchmaking.html">Jelajahi sesi <span aria-hidden="true">↗</span></a></div>
+    </section>
+
+    <section class="section container">
+      <div class="section-heading"><div><span class="eyebrow">MATCHMAKING</span><h2>Sesi yang akan datang</h2><p class="muted">Lihat sesi terbuka dan isi timmu.</p></div><a class="text-link" href="./matchmaking.html">Lihat semua →</a></div>
+      <div id="sessionPreview" class="session-grid"><div class="notice">Memuat sesi…</div></div>
+    </section>
+  </main>
+  <footer class="footer"><div class="container footer-inner"><a class="brand" href="./index.html"><span class="brand-mark">F</span><span>FUTSAL<span class="brand-light">KITA</span></span></a><span>Temukan lapangan. Temukan tim. Mulai main.</span><a href="./login.html">Masuk akun ↗</a></div></footer>
 
   <script type="module">
-    import { getBookings } from './js/api.js'
-
-    const today = new Date().toISOString().split('T')[0]
-    const bookings = await getBookings(today)
-
-    const container = document.getElementById('calendar')
-
-    for (let hour = 8; hour <= 22; hour++) {
-      const slot = document.createElement('div')
-      slot.innerText = `${hour}:00`
-
-      const booking = bookings.find(b =>
-        hour >= b.start_time && hour < b.end_time
-      )
-
-      if (booking) {
-        slot.style.background =
-          booking.payment_status === 'paid'
-            ? 'green'
-            : booking.payment_status === 'partial'
-            ? 'yellow'
-            : 'red'
-      }
-
-      container.appendChild(slot)
+    import { getFields, getPublicBookings, getMatchmakingSessions } from './js/api.js'
+    const $ = (id) => document.getElementById(id)
+    const localDate = (d = new Date()) => {
+      const offset = d.getTimezoneOffset() * 60000
+      return new Date(d.getTime() - offset).toISOString().slice(0, 10)
     }
+    const dateInput = $('bookingDate')
+    dateInput.value = localDate()
+    dateInput.min = localDate()
+    const timeLabel = (time) => String(time).slice(0, 5)
+    const money = (value) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value || 0)
+    async function loadAvailability() {
+      $('availabilityState').textContent = 'Memuat ketersediaan…'
+      $('courtList').replaceChildren()
+      try {
+        const [fields, bookings] = await Promise.all([getFields(), getPublicBookings(dateInput.value)])
+        if (!fields.length) {
+          $('availabilityState').textContent = 'Belum ada lapangan yang ditambahkan. Pengelola perlu menambahkan lapangan di Supabase.'
+          return
+        }
+        $('availabilityState').textContent = 'Pilih waktu yang sesuai. Untuk membuat booking, hubungi pengelola lapangan.'
+        for (const field of fields) {
+          const card = document.createElement('article')
+          card.className = 'court-card'
+          const heading = document.createElement('div')
+          heading.className = 'court-card-heading'
+          const info = document.createElement('div')
+          const name = document.createElement('h3')
+          name.textContent = field.name
+          const location = document.createElement('p')
+          location.textContent = field.location || 'Lokasi belum diatur'
+          info.append(name, location)
+          const price = document.createElement('strong')
+          price.className = 'court-price'
+          price.textContent = money(field.hourly_rate) + '/jam'
+          heading.append(info, price)
+          const slots = document.createElement('div')
+          slots.className = 'time-slots'
+          const fieldBookings = bookings.filter(b => b.field_id === field.id)
+          for (let hour = 8; hour < 24; hour++) {
+            const booked = fieldBookings.some(b => {
+              const start = Number(timeLabel(b.start_time).slice(0, 2))
+              return hour >= start && hour < start + Number(b.duration_hours)
+            })
+            const slot = document.createElement('div')
+            slot.className = 'time-slot ' + (booked ? 'is-booked' : 'is-open')
+            slot.textContent = String(hour).padStart(2, '0') + ':00'
+            slot.title = booked ? 'Terisi' : 'Tersedia'
+            slots.append(slot)
+          }
+          card.append(heading, slots)
+          $('courtList').append(card)
+        }
+      } catch (error) {
+        $('availabilityState').textContent = 'Gagal memuat jadwal. Pastikan migration Supabase sudah dijalankan. Detail: ' + error.message
+      }
+    }
+    function sessionCard(session) {
+      const card = document.createElement('article')
+      card.className = 'session-card'
+      const badge = document.createElement('span')
+      badge.className = 'status-pill ' + (Number(session.joined_count) >= session.max_players ? 'status-full' : 'status-open')
+      badge.textContent = Number(session.joined_count) >= session.max_players ? 'PENUH' : 'OPEN MATCH'
+      const title = document.createElement('h3')
+      title.textContent = session.title
+      const venue = document.createElement('p')
+      venue.className = 'muted'
+      venue.textContent = '⌖ ' + session.venue
+      const date = document.createElement('p')
+      date.textContent = new Date(session.session_date + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' }) + ' · ' + timeLabel(session.start_time)
+      const footer = document.createElement('div')
+      footer.className = 'session-card-footer'
+      const count = document.createElement('span')
+      count.textContent = session.joined_count + '/' + session.max_players + ' pemain'
+      const level = document.createElement('span')
+      level.textContent = session.skill_level === 'any' ? 'Semua level' : session.skill_level
+      footer.append(count, level)
+      card.append(badge, title, venue, date, footer)
+      return card
+    }
+    async function loadSessions() {
+      const root = $('sessionPreview')
+      root.replaceChildren()
+      try {
+        const sessions = (await getMatchmakingSessions()).filter(s => s.status === 'open' && Number(s.joined_count) < s.max_players).slice(0, 3)
+        if (!sessions.length) {
+          const empty = document.createElement('div')
+          empty.className = 'empty-state'
+          empty.textContent = 'Belum ada sesi open match. Kamu bisa jadi yang pertama membuat sesi.'
+          root.append(empty)
+          return
+        }
+        sessions.forEach(s => root.append(sessionCard(s)))
+      } catch (error) {
+        const message = document.createElement('div')
+        message.className = 'notice'
+        message.textContent = 'Sesi belum dapat dimuat. Pastikan migration Supabase sudah dijalankan.'
+        root.append(message)
+      }
+    }
+    dateInput.addEventListener('change', loadAvailability)
+    await Promise.all([loadAvailability(), loadSessions()])
   </script>
 </body>
 </html>
