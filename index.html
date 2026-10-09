@@ -43,7 +43,21 @@
       </div>
       <div id="availabilityState" class="notice">Memuat ketersediaan…</div>
       <div id="courtList" class="court-list"></div>
-      <div class="availability-legend"><span><i class="legend-open"></i>Tersedia</span><span><i class="legend-booked"></i>Terisi</span><span class="muted">Booking publik perlu dikonfirmasi pengelola lapangan.</span></div>
+      <div class="availability-legend"><span><i class="legend-open"></i>Tersedia</span><span><i class="legend-booked"></i>Terisi</span><span class="muted">Permintaan booking menunggu konfirmasi pengelola.</span></div>
+      <section id="booking-request" class="panel request-panel">
+        <div class="panel-heading"><div><span class="eyebrow">AJUKAN BOOKING</span><h2>Amankan slot pilihanmu</h2><p class="muted">Kirim permintaan booking. Pengelola akan mengonfirmasi jadwal dan pembayaran.</p></div></div>
+        <form id="requestBookingForm">
+          <div class="form-grid">
+            <label class="form-field">Pilih lapangan<select id="requestField" required><option value="">Memuat lapangan…</option></select></label>
+            <label class="form-field">Jam mulai<select id="requestStart" required></select></label>
+            <label class="form-field">Durasi<select id="requestDuration"><option value="1">1 jam</option><option value="2" selected>2 jam</option><option value="3">3 jam</option><option value="4">4 jam</option><option value="5">5 jam</option><option value="6">6 jam</option><option value="7">7 jam</option><option value="8">8 jam</option></select></label>
+            <label class="form-field">Nama pemesan<input id="requestName" maxlength="100" placeholder="Nama kamu" required></label>
+            <label class="form-field form-field-full">Catatan (opsional)<input id="requestNotes" maxlength="500" placeholder="Jumlah pemain, permintaan khusus, dll."></label>
+          </div>
+          <p id="requestMessage" class="form-message" role="status"></p>
+          <button id="requestSubmit" class="button button-accent" type="submit">Ajukan booking →</button>
+        </form>
+      </section>
     </section>
 
     <section class="match-strip">
@@ -58,7 +72,8 @@
   <footer class="footer"><div class="container footer-inner"><a class="brand" href="./index.html"><span class="brand-mark">F</span><span>FUTSAL<span class="brand-light">KITA</span></span></a><span>Temukan lapangan. Temukan tim. Mulai main.</span><a href="./login.html">Masuk akun ↗</a></div></footer>
 
   <script type="module">
-    import { getFields, getPublicBookings, getMatchmakingSessions } from './js/api.js'
+    import { getFields, getPublicBookings, getMatchmakingSessions, requestBooking } from './js/api.js'
+    import { supabase } from './js/supabase.js'
     const $ = (id) => document.getElementById(id)
     const localDate = (d = new Date()) => {
       const offset = d.getTimezoneOffset() * 60000
@@ -74,6 +89,7 @@
       $('courtList').replaceChildren()
       try {
         const [fields, bookings] = await Promise.all([getFields(), getPublicBookings(dateInput.value)])
+        populateRequestForm(fields)
         if (!fields.length) {
           $('availabilityState').textContent = 'Belum ada lapangan yang ditambahkan. Pengelola perlu menambahkan lapangan di Supabase.'
           return
@@ -158,7 +174,49 @@
         root.append(message)
       }
     }
+    function populateRequestForm(fields) {
+      const select=$('requestField'), previous=select.value
+      select.replaceChildren()
+      fields.forEach(field=>{
+        const option=document.createElement('option'); option.value=field.id; option.textContent=field.name+' · '+money(field.hourly_rate)+'/jam'; select.append(option)
+      })
+      if (previous && fields.some(field=>field.id===previous)) select.value=previous
+      const start=$('requestStart'), oldStart=start.value
+      start.replaceChildren()
+      for(let hour=8;hour<24;hour++){
+        const option=document.createElement('option'); option.value=String(hour).padStart(2,'0')+':00'; option.textContent=option.value; start.append(option)
+      }
+      if(oldStart) start.value=oldStart
+    }
+    const originalLoadAvailability = loadAvailability
     dateInput.addEventListener('change', loadAvailability)
+    $('requestBookingForm').addEventListener('submit',async event=>{
+      event.preventDefault()
+      const button=$('requestSubmit'); button.disabled=true; button.textContent='Mengirim…'
+      const message=$('requestMessage'); message.className='form-message'; message.textContent=''
+      try{
+        const {data:{user},error:authError}=await supabase.auth.getUser()
+        if(authError) throw authError
+        if(!user){
+          message.textContent='Login atau daftar dulu untuk mengirim permintaan booking.'
+          message.className='form-message error'
+          const link=document.createElement('a'); link.href='./login.html?next=index.html%23booking-request'; link.className='text-link'; link.textContent='Login / daftar →'; message.append(' ',link)
+          return
+        }
+        await requestBooking({
+          p_field_id:$('requestField').value,p_date:dateInput.value,p_start:$('requestStart').value,
+          p_duration:Number($('requestDuration').value),p_customer_name:$('requestName').value.trim(),
+          p_notes:$('requestNotes').value.trim() || null
+        })
+        message.textContent='Permintaan booking terkirim. Status awal: menunggu konfirmasi pengelola.'
+        message.className='form-message success'
+        $('requestNotes').value=''
+        await loadAvailability()
+      }catch(error){
+        message.textContent=error.message || 'Gagal mengirim permintaan booking.'
+        message.className='form-message error'
+      }finally{button.disabled=false;button.textContent='Ajukan booking →'}
+    })
     await Promise.all([loadAvailability(), loadSessions()])
   </script>
 </body>
