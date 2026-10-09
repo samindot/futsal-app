@@ -4,15 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#10251d">
-  <title>Lapangan Futsal — Booking & Cari Teman Main</title>
+  <title>FutsalKita — Booking Lapangan & Cari Lawan Sparing</title>
   <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
   <nav class="nav container">
     <a class="brand" href="./index.html"><span class="brand-mark">F</span><span>FUTSAL<span class="brand-light">KITA</span></span></a>
     <div class="nav-links">
-      <a href="#availability">Cek lapangan</a>
-      <a href="./matchmaking.html">Cari teman main</a>
+      <a href="#availability">Cek lapangan</a><span id="userGreeting" class="nav-greeting hidden"></span>
+      <a href="./matchmaking.html">Cari lawan sparing</a>
       <a id="loginLink" class="button button-small button-dark" href="./login.html">Login / Daftar</a><button id="logoutButton" class="button button-small button-outline hidden" type="button">Logout</button>
     </div>
   </nav>
@@ -25,14 +25,14 @@
         <p>Temukan slot lapangan dan gabung sesi futsal bersama pemain lain. Semua dalam satu tempat.</p>
         <div class="hero-actions">
           <a class="button button-accent" href="#availability">Lihat ketersediaan <span aria-hidden="true">↗</span></a>
-          <a class="button button-outline" href="./matchmaking.html">Cari teman main</a>
+          <a class="button button-outline" href="./matchmaking.html">Cari lawan sparing</a>
         </div>
         <div class="hero-stats"><div><strong>01</strong><span>Cek jadwal</span></div><div><strong>02</strong><span>Pilih sesi</span></div><div><strong>03</strong><span>Gas main</span></div></div>
       </div>
       <div class="hero-art" aria-label="Ilustrasi lapangan futsal">
         <div class="art-tag tag-top"><span class="tag-dot"></span> YOUR NEXT GAME</div>
         <div class="court-art"><div class="court-mid"></div><div class="court-circle"></div><div class="court-box court-box-left"></div><div class="court-box court-box-right"></div><div class="court-goal court-goal-left"></div><div class="court-goal court-goal-right"></div></div>
-        <div class="art-card"><div class="avatar-stack"><span>⚽</span><span>⚡</span><span>＋</span></div><div><strong>Temukan timmu</strong><small>Mulai dari satu sesi</small></div><span class="art-arrow">↗</span></div>
+        <div class="art-card"><div class="avatar-stack"><span>⚽</span><span>⚡</span><span>＋</span></div><div><strong>Temukan lawan tanding</strong><small>Mulai dari jadwal sparing</small></div><span class="art-arrow">↗</span></div>
       </div>
     </section>
 
@@ -61,15 +61,15 @@
     </section>
 
     <section class="match-strip">
-      <div class="container strip-inner"><div><span class="eyebrow">BELUM PUNYA TIM?</span><h2>Kurang pemain? Gabung aja.</h2><p>Buat sesi sendiri atau cari open match yang masih punya tempat.</p></div><a class="button button-accent" href="./matchmaking.html">Jelajahi sesi <span aria-hidden="true">↗</span></a></div>
+      <div class="container strip-inner"><div><span class="eyebrow">BUTUH LAWAN TANDING?</span><h2>Tim siap main, lawan belum ada?</h2><p>Pasang jadwal sparing tim kamu dan temukan tim lain yang ingin bertanding.</p></div><a class="button button-accent" href="./matchmaking.html">Cari lawan sparing <span aria-hidden="true">↗</span></a></div>
     </section>
 
     <section class="section container">
-      <div class="section-heading"><div><span class="eyebrow">MATCHMAKING</span><h2>Sesi yang akan datang</h2><p class="muted">Lihat sesi terbuka dan isi timmu.</p></div><a class="text-link" href="./matchmaking.html">Lihat semua →</a></div>
+      <div class="section-heading"><div><span class="eyebrow">TEAM MATCHMAKING</span><h2>Tawaran sparing mendatang</h2><p class="muted">Temukan jadwal sparing yang dipasang tim lain.</p></div><a class="text-link" href="./matchmaking.html">Lihat semua tawaran →</a></div>
       <div id="sessionPreview" class="session-grid"><div class="notice">Memuat sesi…</div></div>
     </section>
   </main>
-  <footer class="footer"><div class="container footer-inner"><a class="brand" href="./index.html"><span class="brand-mark">F</span><span>FUTSAL<span class="brand-light">KITA</span></span></a><span>Temukan lapangan. Temukan tim. Mulai main.</span><a href="./login.html">Masuk akun ↗</a></div></footer>
+  <footer class="footer"><div class="container footer-inner"><a class="brand" href="./index.html"><span class="brand-mark">F</span><span>FUTSAL<span class="brand-light">KITA</span></span></a><span>Temukan lapangan. Temukan lawan tanding.</span><a href="./login.html">Masuk akun ↗</a></div></footer>
 
   <script type="module">
     import { getFields, getPublicBookings, getMatchmakingSessions, requestBooking } from './js/api.js'
@@ -81,6 +81,10 @@
       const { data: { session }, error } = await supabase.auth.getSession()
       if (error) throw error
       if (session) {
+        const { data: { user } } = await supabase.auth.getUser()
+        const displayName = user?.user_metadata?.display_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Pemain'
+        $('userGreeting').textContent = `Halo, @${displayName}!`
+        $('userGreeting').classList.remove('hidden')
         $('loginLink').classList.add('hidden')
         $('logoutButton').classList.remove('hidden')
       }
@@ -150,7 +154,7 @@
       card.className = 'session-card'
       const badge = document.createElement('span')
       badge.className = 'status-pill ' + (Number(session.joined_count) >= session.max_players ? 'status-full' : 'status-open')
-      badge.textContent = Number(session.joined_count) >= session.max_players ? 'PENUH' : 'OPEN MATCH'
+      badge.textContent = Number(session.joined_count) >= session.max_players ? 'PENUH' : 'MENCARI LAWAN'
       const title = document.createElement('h3')
       title.textContent = session.title
       const venue = document.createElement('p')
@@ -176,7 +180,7 @@
         if (!sessions.length) {
           const empty = document.createElement('div')
           empty.className = 'empty-state'
-          empty.textContent = 'Belum ada sesi open match. Kamu bisa jadi yang pertama membuat sesi.'
+          empty.textContent = 'Belum ada tawaran sparing. Jadilah tim pertama yang memasang jadwal.'
           root.append(empty)
           return
         }
