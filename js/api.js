@@ -25,6 +25,10 @@ export async function getPublicBookings(date) {
   return unwrap(supabase.rpc('get_public_bookings', { p_date: date }))
 }
 
+export async function requestBooking(payload) {
+  return unwrap(supabase.rpc('request_booking', payload))
+}
+
 export async function createBooking(payload) {
   return unwrap(supabase.rpc('create_booking', payload))
 }
