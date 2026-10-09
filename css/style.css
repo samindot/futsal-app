@@ -268,3 +268,9 @@ button:disabled { opacity: .58; cursor: not-allowed; }
 .request-panel .form-grid { margin-top: 18px; }
 .form-field-full { grid-column: 1 / -1; }
 @media (max-width: 680px) { .form-field-full { grid-column: auto; } }
+
+/* Google OAuth sign-in */
+.auth-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0 14px; color: var(--muted); font-size: .78rem; }
+.auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.google-button { display: flex; align-items: center; justify-content: center; gap: 11px; }
+.google-button svg { flex: 0 0 20px; }
