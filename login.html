@@ -1,24 +1,75 @@
-<!DOCTYPE html>
-<html>
-<body>
-  <h2>Login</h2>
-  <input id="email" placeholder="email" />
-  <input id="password" type="password" placeholder="password" />
-  <button onclick="handleLogin()">Login</button>
-
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login — FutsalKita</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body class="auth-page">
+  <nav class="nav container"><a class="brand" href="./index.html"><span class="brand-mark">F</span><span>FUTSAL<span class="brand-light">KITA</span></span></a><a class="text-link" href="./index.html">← Kembali ke beranda</a></nav>
+  <main class="auth-layout container">
+    <section class="auth-intro"><span class="eyebrow">AKUN PEMAIN</span><h1>Satu akun.<br><span class="text-accent">Lebih banyak game.</span></h1><p>Masuk untuk gabung open match atau buat sesi futsal sendiri. Pengelola lapangan juga bisa mengakses kalender admin.</p><div class="auth-points"><span>✓ Gabung sesi open match</span><span>✓ Buat sesi dan cari pemain</span><span>✓ Kelola booking jika admin</span></div></section>
+    <section class="auth-card">
+      <div class="auth-tabs"><button id="tabLogin" class="auth-tab active" type="button">Login</button><button id="tabRegister" class="auth-tab" type="button">Daftar akun</button></div>
+      <h2 id="formTitle">Selamat datang lagi</h2><p id="formSubtitle" class="muted">Masuk dengan email dan password kamu.</p>
+      <form id="authForm">
+        <label id="nameWrap" class="form-field hidden">Nama panggilan<input id="displayName" autocomplete="name" placeholder="Nama kamu"></label>
+        <label class="form-field">Email<input id="email" type="email" autocomplete="email" placeholder="nama@email.com" required></label>
+        <label class="form-field">Password<input id="password" type="password" autocomplete="current-password" minlength="6" placeholder="Minimal 6 karakter" required></label>
+        <button id="submitButton" class="button button-accent button-wide" type="submit">Login <span>→</span></button>
+      </form>
+      <p id="authMessage" class="form-message" role="status"></p>
+      <p class="auth-small">Dengan membuat akun, kamu setuju menggunakan data akun untuk keperluan sesi dan partisipasi futsal.</p>
+    </section>
+  </main>
   <script type="module">
-    import { login } from './js/auth.js'
-
-    window.handleLogin = async () => {
-      try {
-        await login(
-          document.getElementById('email').value,
-          document.getElementById('password').value
-        )
-      } catch (e) {
-        alert(e.message)
-      }
+    import { login, register } from './js/auth.js'
+    const $ = id => document.getElementById(id)
+    let mode = 'login'
+    function setMode(next) {
+      mode = next
+      $('tabLogin').classList.toggle('active', mode === 'login')
+      $('tabRegister').classList.toggle('active', mode === 'register')
+      $('nameWrap').classList.toggle('hidden', mode === 'login')
+      $('displayName').required = mode === 'register'
+      $('password').autocomplete = mode === 'login' ? 'current-password' : 'new-password'
+      $('formTitle').textContent = mode === 'login' ? 'Selamat datang lagi' : 'Bikin akun pemain'
+      $('formSubtitle').textContent = mode === 'login' ? 'Masuk dengan email dan password kamu.' : 'Daftar dulu, lalu mulai cari sesi main.'
+      $('submitButton').innerHTML = mode === 'login' ? 'Login <span>→</span>' : 'Buat akun <span>→</span>'
+      $('authMessage').textContent = ''
     }
+    $('tabLogin').addEventListener('click', () => setMode('login'))
+    $('tabRegister').addEventListener('click', () => setMode('register'))
+    $('authForm').addEventListener('submit', async event => {
+      event.preventDefault()
+      const button = $('submitButton')
+      button.disabled = true
+      button.textContent = 'Memproses…'
+      $('authMessage').textContent = ''
+      $('authMessage').className = 'form-message'
+      try {
+        if (mode === 'login') {
+          await login($('email').value, $('password').value)
+        } else {
+          const result = await register($('email').value, $('password').value, $('displayName').value)
+          if (result?.confirmationRequired) {
+            $('authMessage').textContent = 'Akun berhasil dibuat. Cek email untuk konfirmasi, lalu login.'
+            $('authMessage').classList.add('success')
+            setMode('login')
+            $('authMessage').textContent = 'Akun berhasil dibuat. Cek email untuk konfirmasi, lalu login.'
+            return
+          }
+        }
+      } catch (error) {
+        $('authMessage').textContent = error.message || 'Terjadi kesalahan. Coba lagi.'
+        $('authMessage').classList.add('error')
+      } finally {
+        button.disabled = false
+        if (mode === 'login') button.innerHTML = 'Login <span>→</span>'
+        else button.innerHTML = 'Buat akun <span>→</span>'
+      }
+    })
   </script>
 </body>
 </html>
