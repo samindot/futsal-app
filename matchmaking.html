@@ -66,9 +66,10 @@
       const notes=document.createElement('p'); notes.className='session-notes'; notes.textContent=session.notes || 'Belum ada catatan tambahan.'
       const actions=document.createElement('div'); actions.className='session-actions'
       const joined=myJoined.has(session.id)
+      const isHost=Boolean(currentUser && session.host_id===currentUser.id)
       const button=document.createElement('button'); button.type='button'; button.className='button '+(joined?'button-outline':'button-accent')+' button-wide'
-      button.textContent=joined?'Keluar dari sesi':session.status==='full' || Number(session.joined_count)>=session.max_players?'Penuh':currentUser?'Gabung sesi →':'Login untuk gabung →'
-      button.disabled=!joined && (session.status==='full' || Number(session.joined_count)>=session.max_players)
+      button.textContent=isHost?'Sesi kamu':joined?'Keluar dari sesi':session.status==='full' || Number(session.joined_count)>=session.max_players?'Penuh':currentUser?'Gabung sesi →':'Login untuk gabung →'
+      button.disabled=isHost || (!joined && (session.status==='full' || Number(session.joined_count)>=session.max_players))
       button.addEventListener('click',async()=>{
         if (!currentUser) { window.location.href='./login.html'; return }
         button.disabled=true; button.textContent='Memproses…'
@@ -76,11 +77,19 @@
           if (myJoined.has(session.id)) await leaveMatchmakingSession(session.id)
           else await joinMatchmakingSession(session.id)
           await loadSessions()
-        } catch(error) { $('sessionMessage').textContent=error.message; $('sessionMessage').classList.add('error'); button.disabled=false; button.textContent=joined?'Keluar dari sesi':'Gabung sesi →' }
+        } catch(error) { $('sessionMessage').textContent=error.message; $('sessionMessage').className='notice error'; button.disabled=false; button.textContent=joined?'Keluar dari sesi':'Gabung sesi →' }
       })
       actions.append(button)
-      if (currentUser && session.host_id===currentUser.id) {
-        const host=document.createElement('span'); host.className='host-label'; host.textContent='Sesi kamu'; actions.append(host)
+      if (isHost) {
+        const cancel=document.createElement('button'); cancel.type='button'; cancel.className='button button-outline button-wide'; cancel.textContent='Batalkan sesi'
+        cancel.addEventListener('click',async()=>{
+          if (!confirm('Batalkan sesi ini? Pemain lain tidak lagi melihat sesi ini.')) return
+          cancel.disabled=true; cancel.textContent='Membatalkan…'
+          const {error}=await supabase.from('matchmaking_sessions').update({status:'cancelled'}).eq('id',session.id)
+          if (error) { $('sessionMessage').textContent=error.message; $('sessionMessage').className='notice error'; cancel.disabled=false; cancel.textContent='Batalkan sesi'; return }
+          await loadSessions()
+        })
+        actions.append(cancel)
       }
       card.append(top,title,venue,date,countWrap,notes,actions)
       return card
