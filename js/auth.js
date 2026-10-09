@@ -17,6 +17,15 @@ export async function login(email, password) {
   window.location.href = getRedirectTarget()
 }
 
+export async function signInWithGoogle() {
+  const redirectTo = new URL(getRedirectTarget(), window.location.href).href
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo }
+  })
+  if (error) throw error
+}
+
 export async function register(email, password, displayName) {
   const { data, error } = await supabase.auth.signUp({
     email: email.trim(),
