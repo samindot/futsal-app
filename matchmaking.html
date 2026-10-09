@@ -143,7 +143,7 @@
       const {data:{user}}=await supabase.auth.getUser(); currentUser=user
       if (user) {
         const displayName = user.user_metadata?.display_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Pemain'
-        $('userGreeting').textContent = `Halo, @${displayName}!`
+        $('userGreeting').textContent = `Halo, ${displayName}!`
         $('userGreeting').classList.remove('hidden')
         profile=await getCurrentProfile()
         $('loginLink').classList.add('hidden'); $('logoutButton').classList.remove('hidden')
