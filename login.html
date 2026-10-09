@@ -11,6 +11,18 @@
   <main class="auth-layout container">
     <section class="auth-intro"><span class="eyebrow">AKUN PEMAIN</span><h1>Satu akun.<br><span class="text-accent">Lebih banyak game.</span></h1><p>Masuk untuk gabung open match atau buat sesi futsal sendiri. Pengelola lapangan juga bisa mengakses kalender admin.</p><div class="auth-points"><span>✓ Gabung sesi open match</span><span>✓ Buat sesi dan cari pemain</span><span>✓ Kelola booking jika admin</span></div></section>
     <section class="auth-card">
+      <section id="registrationSuccess" class="hidden" aria-live="polite">
+        <div class="verify-icon" aria-hidden="true">
+          <svg viewBox="0 0 80 80" fill="none"><circle cx="40" cy="40" r="36" fill="#EDF8E3"/><path d="M23 40.5 34 51l23-24" stroke="#477A32" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <span class="eyebrow">PENDAFTARAN BERHASIL</span>
+        <h2 style="margin-top:12px">Cek email kamu!</h2>
+        <p class="muted">Akun berhasil didaftarkan. Kami mengirim tautan verifikasi ke:</p>
+        <p id="registeredEmail" style="font-weight:700;overflow-wrap:anywhere"></p>
+        <p class="muted">Buka email tersebut dan klik tautan verifikasi sebelum login. Cek juga folder spam jika email belum terlihat.</p>
+        <button id="backToLogin" class="button button-accent button-wide" type="button">Kembali ke login <span>→</span></button>
+      </section>
+      <div id="authFormPanel">
       <div class="auth-tabs"><button id="tabLogin" class="auth-tab active" type="button">Login</button><button id="tabRegister" class="auth-tab" type="button">Daftar akun</button></div>
       <h2 id="formTitle">Selamat datang lagi</h2><p id="formSubtitle" class="muted">Masuk dengan email dan password kamu.</p>
       <form id="authForm">
@@ -26,6 +38,7 @@
       </button>
       <p id="authMessage" class="form-message" role="status"></p>
       <p class="auth-small">Dengan membuat akun, kamu setuju menggunakan data akun untuk keperluan sesi dan partisipasi futsal.</p>
+      </div>
     </section>
   </main>
   <script type="module">
@@ -63,6 +76,13 @@
     })
     $('tabLogin').addEventListener('click', () => setMode('login'))
     $('tabRegister').addEventListener('click', () => setMode('register'))
+    $('backToLogin').addEventListener('click', () => {
+      $('registrationSuccess').classList.add('hidden')
+      $('authFormPanel').classList.remove('hidden')
+      $('email').value = ''
+      $('password').value = ''
+      setMode('login')
+    })
     $('authForm').addEventListener('submit', async event => {
       event.preventDefault()
       const button = $('submitButton')
@@ -76,10 +96,11 @@
         } else {
           const result = await register($('email').value, $('password').value, $('displayName').value)
           if (result?.confirmationRequired) {
-            $('authMessage').textContent = 'Akun berhasil dibuat. Cek email untuk konfirmasi, lalu login.'
-            $('authMessage').classList.add('success')
-            setMode('login')
-            $('authMessage').textContent = 'Akun berhasil dibuat. Cek email untuk konfirmasi, lalu login.'
+            $('registeredEmail').textContent = $('email').value.trim()
+            $('authFormPanel').classList.add('hidden')
+            $('registrationSuccess').classList.remove('hidden')
+            $('email').value = ''
+            $('password').value = ''
             return
           }
         }
