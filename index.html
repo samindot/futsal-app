@@ -22,7 +22,7 @@
       <div class="hero-copy">
         <span class="eyebrow"><span class="pulse"></span> MAIN BARENG, LEBIH GAMPANG</span>
         <h1>Lapangan siap.<br><span class="text-accent">Tim tinggal dicari.</span></h1>
-        <p>Temukan slot lapangan dan gabung sesi futsal bersama pemain lain. Semua dalam satu tempat.</p>
+        <p>Temukan dan booking lapangan, lalu hubungkan tim kamu dengan tim lain untuk sparing.</p>
         <div class="hero-actions">
           <a class="button button-accent" href="#availability">Lihat ketersediaan <span aria-hidden="true">↗</span></a>
           <a class="button button-outline" href="./matchmaking.html">Cari lawan sparing</a>
@@ -165,7 +165,7 @@
       const footer = document.createElement('div')
       footer.className = 'session-card-footer'
       const count = document.createElement('span')
-      count.textContent = session.joined_count + '/' + session.max_players + ' pemain'
+      count.textContent = session.joined_count + '/' + session.max_players + ' pemain terdaftar'
       const level = document.createElement('span')
       level.textContent = session.skill_level === 'any' ? 'Semua level' : session.skill_level
       footer.append(count, level)
