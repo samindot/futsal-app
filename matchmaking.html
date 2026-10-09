@@ -68,7 +68,7 @@
       const joined=myJoined.has(session.id)
       const isHost=Boolean(currentUser && session.host_id===currentUser.id)
       const button=document.createElement('button'); button.type='button'; button.className='button '+(joined?'button-outline':'button-accent')+' button-wide'
-      button.textContent=isHost?'Jadwal tim kamu':joined?'Batalkan keikutsertaan':session.status==='full' || Number(session.joined_count)>=session.max_players?'Penuh':currentUser?'Lihat tawaran sparing →':'Login untuk gabung →'
+      button.textContent=isHost?'Jadwal tim kamu':joined?'Batalkan keikutsertaan':session.status==='full' || Number(session.joined_count)>=session.max_players?'Penuh':currentUser?'Lihat jadwal sparing →':'Login untuk melihat →'
       button.disabled=isHost || (!joined && (session.status==='full' || Number(session.joined_count)>=session.max_players))
       button.addEventListener('click',async()=>{
         if (!currentUser) { window.location.href='./login.html'; return }
