@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10251d">
+  <title>Email Terverifikasi — FutsalKita</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body class="auth-page">
+  <nav class="nav container">
+    <a class="brand" href="./index.html"><span class="brand-mark">F</span><span>FUTSAL<span class="brand-light">KITA</span></span></a>
+    <a class="text-link" href="./index.html">← Kembali ke beranda</a>
+  </nav>
+  <main class="verify-layout container">
+    <section class="verify-card">
+      <div class="verify-icon" aria-hidden="true">
+        <svg viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="30" fill="#EAF6DF"/><path d="m18 32 9 9 19-20" stroke="#416E2D" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <span class="eyebrow">SATU LANGKAH LAGI</span>
+      <h1 id="verifyTitle">Email berhasil diverifikasi!</h1>
+      <p id="verifyMessage">Alamat email kamu sudah dikonfirmasi. Sekarang login untuk mulai mencari teman main atau bergabung ke open match.</p>
+      <a id="loginLink" class="button button-accent button-wide" href="./login.html?verified=1">Login sekarang <span aria-hidden="true">→</span></a>
+      <a class="verify-home-link" href="./index.html">Kembali ke beranda</a>
+      <p class="verify-footnote">Akun sudah terverifikasi, tetapi kamu mungkin masih perlu login untuk melanjutkan.</p>
+    </section>
+  </main>
+  <script type="module">
+    import { supabase } from './js/supabase.js'
+    const title = document.getElementById('verifyTitle')
+    const message = document.getElementById('verifyMessage')
+    const loginLink = document.getElementById('loginLink')
+    const params = new URLSearchParams(window.location.search)
+    const hash = new URLSearchParams(window.location.hash.slice(1))
+    const errorCode = params.get('error_code') || hash.get('error_code')
+    const errorDescription = params.get('error_description') || hash.get('error_description')
+    const hasSignupToken = hash.get('type') === 'signup' && Boolean(hash.get('access_token'))
+
+    if (errorCode || errorDescription) {
+      title.textContent = 'Tautan verifikasi bermasalah'
+      message.textContent = errorCode === 'otp_expired'
+        ? 'Tautan verifikasi sudah kedaluwarsa atau pernah digunakan. Kembali ke halaman login dan coba daftar ulang atau minta tautan baru.'
+        : 'Email belum dapat diverifikasi melalui tautan ini. Coba minta tautan verifikasi baru.'
+      loginLink.textContent = 'Kembali ke login'
+      loginLink.href = './login.html'
+    } else {
+      const { data } = await supabase.auth.getSession()
+      if (!hasSignupToken && !data.session) {
+        title.textContent = 'Periksa status verifikasi email'
+        message.textContent = 'Jika kamu baru saja mengeklik tautan verifikasi, coba login. Jika belum berhasil, minta tautan verifikasi baru dari halaman login.'
+      }
+    }
+  </script>
+</body>
+</html>
