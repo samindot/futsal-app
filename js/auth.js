@@ -1,12 +1,20 @@
 import { supabase } from './supabase.js'
 
+function getRedirectTarget() {
+  const params = new URLSearchParams(window.location.search)
+  const next = params.get('next') || 'matchmaking.html'
+  return /^(index\.html|matchmaking\.html|calendar\.html)(#booking-request)?$/.test(next)
+    ? './' + next
+    : './matchmaking.html'
+}
+
 export async function login(email, password) {
   const { error } = await supabase.auth.signInWithPassword({
     email: email.trim(),
     password
   })
   if (error) throw error
-  window.location.href = './matchmaking.html'
+  window.location.href = getRedirectTarget()
 }
 
 export async function register(email, password, displayName) {
@@ -19,7 +27,7 @@ export async function register(email, password, displayName) {
   if (!data.session) {
     return { confirmationRequired: true }
   }
-  window.location.href = './matchmaking.html'
+  window.location.href = getRedirectTarget()
   return { confirmationRequired: false }
 }
 
