@@ -179,7 +179,7 @@ create or replace function public.request_booking(
   p_notes text default null
 )
 returns uuid language plpgsql security definer set search_path = ''
-as $
+as $$
 declare
   v_booking_id uuid;
   v_customer_name text;
@@ -221,7 +221,7 @@ begin
   ) returning id into v_booking_id;
   return v_booking_id;
 end;
-$;
+$$;
 
 create or replace function public.get_public_bookings(p_date date)
 returns table (
