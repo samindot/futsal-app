@@ -6,7 +6,7 @@ A static HTML/ES-module frontend deployed on Cloudflare Pages, using Supabase Au
 
 - Public landing page with date-based court availability; public RPCs expose no customer names or payment data.
 - Authenticated booking requests with overlap prevention and a pending status for admin confirmation.
-- Email/password registration and login with a safe return path after login.
+- Email/password registration and login, plus Google OAuth sign-in with a safe return path after login.
 - Admin booking calendar: create admin bookings, edit customer/payment details, confirm, complete, or cancel bookings.
 - Open-match discovery with skill level, venue, schedule, capacity, and join/leave actions.
 - Authenticated players can create sessions; the host counts toward session capacity and can cancel their own session.
@@ -38,7 +38,18 @@ values
 
 The browser client in `js/supabase.js` contains only the project URL and publishable key. Never put a Supabase secret key or `service_role` key in frontend code or GitHub.
 
-## 2. Cloudflare Pages
+## 2. Enable Google sign-in
+
+The frontend button and OAuth redirect flow are implemented, but Google sign-in will not work until the provider credentials are configured:
+
+1. In Google Cloud Console, create/select a project and configure the OAuth consent screen.
+2. Create an OAuth client ID of type **Web application**.
+3. Add this exact authorized redirect URI in Google Cloud Console: `https://fbkgiebuozyflsbkneaf.supabase.co/auth/v1/callback`.
+4. In **Supabase → Authentication → Providers → Google**, enable Google and paste the Google OAuth client ID and client secret. Save.
+5. In **Supabase → Authentication → URL Configuration**, set the Site URL to the deployed app URL and add the deployed app URL (and any preview URL you will use) to Redirect URLs. The OAuth flow redirects back to the current app origin, usually `https://YOUR-PAGES-DOMAIN/**`.
+6. Test Google sign-in from the deployed site. Do not put the Google client secret in frontend code or GitHub.
+
+## 3. Cloudflare Pages
 
 For this plain HTML/ES-module project:
 
@@ -50,10 +61,11 @@ For this plain HTML/ES-module project:
 
 The working branch is `rebuild/supabase-foundation`. The draft PR is available at https://github.com/samindot/futsal-app/pull/1. Do not promote it to production until the migration has been applied and the end-to-end checklist below passes.
 
-## 3. Smoke-test checklist
+## 4. Smoke-test checklist
 
 - [ ] SQL migration runs successfully in the new project.
 - [ ] Register a player account and confirm email if required.
+- [ ] Configure Google OAuth credentials and verify Google sign-in and return redirect.
 - [ ] Promote the intended admin account using the SQL above.
 - [ ] Insert the real fields and prices.
 - [ ] Public landing page shows the fields and availability for a selected date.
