@@ -38,7 +38,7 @@ create table if not exists public.bookings (
   created_at timestamptz not null default now(),
   constraint booking_end_within_day check (
     start_time < time '24:00'
-    and start_time + make_interval(hours => duration_hours) <= time '24:00'
+    and extract(epoch from start_time) + duration_hours * 3600 <= 86400
   )
 );
 create index if not exists bookings_date_field_idx
@@ -64,6 +64,23 @@ create table if not exists public.matchmaking_sessions (
 create index if not exists matchmaking_sessions_date_idx
   on public.matchmaking_sessions (session_date, start_time)
   where status in ('open','full');
+
+
+create or replace function public.add_host_to_session()
+returns trigger language plpgsql security definer set search_path = ''
+as $
+begin
+  insert into public.matchmaking_players(session_id, player_id, status)
+  values (new.id, new.host_id, 'joined')
+  on conflict (session_id, player_id) do nothing;
+  return new;
+end;
+$;
+drop trigger if exists on_matchmaking_session_created on public.matchmaking_sessions;
+create trigger on_matchmaking_session_created
+after insert on public.matchmaking_sessions
+for each row execute procedure public.add_host_to_session();
+
 
 create table if not exists public.matchmaking_players (
   id uuid primary key default gen_random_uuid(),
@@ -123,7 +140,7 @@ begin
     raise exception 'Start time must be between 08:00 and 23:00';
   end if;
   if p_duration is null or p_duration < 1 or p_duration > 8
-     or p_start + make_interval(hours => p_duration) > time '24:00' then
+     or extract(epoch from p_start) + p_duration * 3600 > 86400 then
     raise exception 'Invalid booking duration or end time';
   end if;
   v_customer_name := nullif(trim(coalesce(p_customer_name, '')), '');
@@ -284,7 +301,7 @@ create policy "Users cancel own participation" on public.matchmaking_players for
 using (player_id = (select auth.uid()) or public.is_admin())
 with check (player_id = (select auth.uid()) or public.is_admin());
 
-grant execute on function public.is_admin() to authenticated;
+grant execute on function public.is_admin() to anon, authenticated;
 grant execute on function public.create_booking(uuid,date,time,integer,numeric,text,text) to authenticated;
 grant execute on function public.get_public_bookings(date) to anon, authenticated;
 grant execute on function public.get_matchmaking_sessions() to anon, authenticated;
