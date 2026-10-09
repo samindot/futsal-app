@@ -78,14 +78,14 @@ create table if not exists public.matchmaking_players (
 
 create or replace function public.add_host_to_session()
 returns trigger language plpgsql security definer set search_path = ''
-as $
+as $$
 begin
   insert into public.matchmaking_players(session_id, player_id, status)
   values (new.id, new.host_id, 'joined')
   on conflict (session_id, player_id) do nothing;
   return new;
 end;
-$;
+$$;
 drop trigger if exists on_matchmaking_session_created on public.matchmaking_sessions;
 create trigger on_matchmaking_session_created
 after insert on public.matchmaking_sessions
