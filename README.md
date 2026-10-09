@@ -45,7 +45,7 @@ For this plain HTML/ES-module project:
 - Connect repository: `samindot/futsal-app`.
 - Production branch: `main` after the PR is reviewed and merged.
 - Build command: leave blank.
-- Build output directory: `/` (repository root).
+- Build output directory: `.` (repository root).
 - No framework preset is required.
 
 The working branch is `rebuild/supabase-foundation`. The draft PR is available at https://github.com/samindot/futsal-app/pull/1. Do not promote it to production until the migration has been applied and the end-to-end checklist below passes.
