@@ -38,13 +38,15 @@ export function initAuthNav() {
 
     if (adminLink) {
       const requestId = ++profileRequest
-      queueMicrotask(() => {
+      // Defer the profile lookup until the auth-state callback has fully returned.
+      // Calling Supabase auth methods from inside onAuthStateChange can deadlock its lock.
+      setTimeout(() => {
         getCurrentProfile().then(profile => {
           if (requestId === profileRequest && profile?.role === 'admin') {
             adminLink.classList.remove('hidden')
           }
         }).catch(error => console.warn('Could not load account role', error))
-      })
+      }, 0)
     }
   }
 
