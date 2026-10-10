@@ -12,6 +12,7 @@ export function initAuthNav() {
   const loginLink = document.getElementById('loginLink')
   const logoutButton = document.getElementById('logoutButton')
   const adminLink = document.getElementById('adminLink')
+  const dashboardLink = document.getElementById('dashboardLink')
   if (!greeting || !loginLink || !logoutButton) return
 
   let profileRequest = 0
@@ -24,6 +25,7 @@ export function initAuthNav() {
       loginLink.classList.remove('hidden')
       logoutButton.classList.add('hidden')
       adminLink?.classList.add('hidden')
+      dashboardLink?.classList.add('hidden')
       return
     }
     const displayName = user.user_metadata?.display_name
@@ -34,6 +36,7 @@ export function initAuthNav() {
     greeting.classList.remove('hidden')
     loginLink.classList.add('hidden')
     logoutButton.classList.remove('hidden')
+    dashboardLink?.classList.remove('hidden')
     adminLink?.classList.add('hidden')
 
     if (adminLink) {
