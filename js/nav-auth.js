@@ -18,6 +18,7 @@ export function initAuthNav() {
   const render = (session) => {
     const user = session?.user || null
     if (!user) {
+      profileRequest++
       greeting.textContent = ''
       greeting.classList.add('hidden')
       loginLink.classList.remove('hidden')
@@ -55,11 +56,6 @@ export function initAuthNav() {
       logoutButton.disabled = false
     }
   })
-
-  supabase.auth.getSession().then(({ data, error }) => {
-    if (error) throw error
-    render(data.session)
-  }).catch(error => console.warn('Could not restore auth session', error))
 
   const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
     render(session)
