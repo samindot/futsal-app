@@ -44,6 +44,17 @@
       <div id="availabilityState" class="notice">Memuat ketersediaan…</div>
       <div id="courtList" class="court-list"></div>
       <div class="availability-legend"><span><i class="legend-open"></i>Tersedia</span><span><i class="legend-booked"></i>Terisi</span><span class="muted">Permintaan booking menunggu konfirmasi pengelola.</span></div>
+      <div id="bookingSuccessModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="bookingSuccessTitle">
+        <div class="modal-content booking-success-modal">
+          <button id="bookingSuccessClose" class="modal-close" type="button" aria-label="Tutup">×</button>
+          <div class="booking-success-icon" aria-hidden="true">✓</div>
+          <span class="eyebrow">PERMINTAAN TERKIRIM</span>
+          <h2 id="bookingSuccessTitle">Booking kamu sedang menunggu konfirmasi</h2>
+          <p id="bookingSuccessMessage" class="muted">Permintaan booking terkirim. Status awal: menunggu konfirmasi pengelola.</p>
+          <p class="booking-success-note">Pengelola akan memeriksa jadwal dan pembayaran sebelum booking dikonfirmasi.</p>
+          <button id="bookingSuccessDone" class="button button-accent button-wide" type="button">Mengerti</button>
+        </div>
+      </div>
       <section id="booking-login-required" class="panel request-panel">
         <div class="panel-heading"><div><span class="eyebrow">BOOKING LAPANGAN</span><h2>Login untuk booking</h2><p class="muted">Jadwal lapangan bisa dilihat publik, tetapi permintaan booking hanya tersedia untuk pengguna yang sudah login.</p></div></div>
         <a id="bookingLoginLink" class="button button-accent" href="./login.html?next=index.html%23booking-request">Login / Daftar untuk Booking →</a>
@@ -233,6 +244,25 @@
         if(previous && [...start.options].some(option=>option.value===previous)) start.value=previous
       }
     }
+    const bookingSuccessModal = $('bookingSuccessModal')
+    function closeBookingSuccessModal() {
+      bookingSuccessModal.classList.add('hidden')
+      document.body.classList.remove('modal-open')
+    }
+    function showBookingSuccessModal() {
+      bookingSuccessModal.classList.remove('hidden')
+      document.body.classList.add('modal-open')
+      $('bookingSuccessDone').focus()
+    }
+    $('bookingSuccessClose').addEventListener('click', closeBookingSuccessModal)
+    $('bookingSuccessDone').addEventListener('click', closeBookingSuccessModal)
+    bookingSuccessModal.addEventListener('click', event => {
+      if (event.target === bookingSuccessModal) closeBookingSuccessModal()
+    })
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && !bookingSuccessModal.classList.contains('hidden')) closeBookingSuccessModal()
+    })
+
     dateInput.addEventListener('change', loadAvailability)
     $('requestField').addEventListener('change', () => updateRequestStartOptions())
     $('requestDuration').addEventListener('change', () => updateRequestStartOptions())
@@ -254,7 +284,9 @@
         })
         message.textContent='Permintaan booking terkirim. Status awal: menunggu konfirmasi pengelola.'
         message.className='form-message success'
+        $('bookingSuccessMessage').textContent='Permintaan booking untuk ' + $('requestField').selectedOptions[0].textContent.split(' · ')[0] + ' pada ' + new Date(dateInput.value + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + ' pukul ' + $('requestStart').value + ' berhasil dikirim. Status awal: menunggu konfirmasi pengelola.'
         $('requestNotes').value=''
+        showBookingSuccessModal()
         await loadAvailability()
       }catch(error){
         message.textContent=error.message || 'Gagal mengirim permintaan booking.'
