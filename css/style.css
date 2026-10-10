@@ -317,3 +317,40 @@ body.modal-open { overflow: hidden; }
 .player-choice-card p { color: var(--muted); line-height: 1.75; }
 .player-choice-link { display: inline-flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 18px; color: var(--green-dark); font-weight: 700; }
 @media (max-width: 700px) { .player-choice-grid { grid-template-columns: 1fr; } .player-choice-card { min-height: 250px; padding: 24px; } }
+
+
+/* Optional matchmaking publication inside the booking form */
+.sparing-toggle {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 15px 16px;
+  border: 1px solid #dbe7d4;
+  border-radius: 12px;
+  background: #f6faF2;
+  cursor: pointer;
+}
+.sparing-toggle > input {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  min-height: 18px;
+  margin: 3px 0 0;
+  accent-color: #477a32;
+}
+.sparing-toggle > span {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sparing-toggle strong {
+  font-size: .88rem;
+  color: var(--ink);
+}
+.sparing-toggle small {
+  font-size: .78rem;
+  line-height: 1.55;
+  color: var(--muted);
+  font-weight: 400;
+}
