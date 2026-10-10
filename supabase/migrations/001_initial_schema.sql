@@ -132,11 +132,15 @@ begin
   if (select auth.uid()) is null or not public.is_admin() then
     raise exception 'Only authenticated admins can create bookings';
   end if;
-  if p_date is null or p_date < current_date then
+  if p_date is null or p_date < (now() at time zone 'Asia/Jakarta')::date then
     raise exception 'Booking date cannot be in the past';
   end if;
   if p_start is null or p_start < time '08:00' or p_start >= time '24:00' then
     raise exception 'Start time must be between 08:00 and 23:00';
+  end if;
+  if p_date = (now() at time zone 'Asia/Jakarta')::date
+     and p_start <= (now() at time zone 'Asia/Jakarta')::time then
+    raise exception 'Booking start time must be in the future';
   end if;
   if p_duration is null or p_duration < 1 or p_duration > 8
      or extract(epoch from p_start) + p_duration * 3600 > 86400 then
@@ -185,9 +189,13 @@ declare
   v_customer_name text;
 begin
   if (select auth.uid()) is null then raise exception 'Silakan login untuk mengajukan booking'; end if;
-  if p_date is null or p_date < current_date then raise exception 'Tanggal booking tidak boleh di masa lalu'; end if;
+  if p_date is null or p_date < (now() at time zone 'Asia/Jakarta')::date then raise exception 'Tanggal booking tidak boleh di masa lalu'; end if;
   if p_start is null or p_start < time '08:00' or p_start >= time '24:00' then
     raise exception 'Jam mulai harus antara 08:00 dan 23:00';
+  end if;
+  if p_date = (now() at time zone 'Asia/Jakarta')::date
+     and p_start <= (now() at time zone 'Asia/Jakarta')::time then
+    raise exception 'Jam mulai booking harus di masa depan';
   end if;
   if p_duration is null or p_duration < 1 or p_duration > 8
      or extract(epoch from p_start) + p_duration * 3600 > 86400 then
