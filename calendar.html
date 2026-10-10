@@ -5,7 +5,7 @@
   <title>Kalender Booking — FutsalKita</title><link rel="stylesheet" href="./css/style.css">
 </head>
 <body class="dashboard-page">
-  <nav class="nav container"><a class="brand" href="./index.html"><span class="brand-mark">F</span><span>FUTSAL<span class="brand-light">KITA</span></span></a><div class="nav-links"><a href="./matchmaking.html">Matchmaking</a><a href="./index.html">Public site</a><button id="logoutButton" class="button button-small button-outline">Logout</button></div></nav>
+  <nav class="nav container"><a class="brand" href="./index.html"><span class="brand-mark">F</span><span>FUTSAL<span class="brand-light">KITA</span></span></a><div class="nav-links"><a href="./index.html#availability">Booking lapangan</a><span id="userGreeting" class="nav-greeting hidden"></span><a id="loginLink" class="button button-small button-dark" href="./login.html?next=calendar.html">Login / Daftar</a><button id="logoutButton" class="button button-small button-outline hidden" type="button">Logout</button></div></nav>
   <main class="container dashboard-main">
     <div class="dashboard-heading"><div><span class="eyebrow">PENGELOLAAN LAPANGAN</span><h1>Kalender booking</h1><p class="muted">Klik slot kosong untuk membuat booking, atau booking aktif untuk mengubah status dan pembayaran.</p></div><label class="date-control hidden"><span>Tanggal booking</span><input id="bookingDate" type="date"></label></div>
     <div id="pageMessage" class="notice">Memeriksa akses akun…</div>
@@ -22,23 +22,16 @@
     <p id="modalMessage" class="form-message" role="status"></p><div class="modal-actions"><button type="button" id="cancelModal" class="button button-outline">Tutup</button><button type="submit" id="saveBooking" class="button button-accent">Simpan booking</button></div>
   </form></div>
   <script type="module">
-    import { requireAuth, logout } from './js/auth.js'
+    import { requireAuth } from './js/auth.js'
+    import { initAuthNav } from './js/nav-auth.js'
     import { getCurrentProfile, getFields, getBookings, createBooking, updateBooking } from './js/api.js'
     const $ = id => document.getElementById(id)
+    initAuthNav()
     const localDate = (d = new Date()) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0,10)
     const money = n => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(n || 0)
     let fields = [], bookings = [], selectedField = null, selectedHour = null, editing = null
     const dateInput = $('bookingDate')
     dateInput.value = localDate(); dateInput.min = localDate()
-    $('logoutButton').addEventListener('click', async () => {
-      $('logoutButton').disabled = true
-      try { await logout() }
-      catch (error) {
-        console.error('Logout failed', error)
-        $('pageMessage').textContent = 'Logout belum berhasil. Periksa koneksi lalu coba lagi.'
-        $('logoutButton').disabled = false
-      }
-    })
     function closeModal() { $('bookingModal').classList.add('hidden'); editing = null }
     $('closeModal').addEventListener('click', closeModal)
     $('cancelModal').addEventListener('click', closeModal)
