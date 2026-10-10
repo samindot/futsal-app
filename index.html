@@ -74,6 +74,7 @@
 
   <script type="module">
     import { getFields, getPublicBookings, getMatchmakingSessions, requestBooking } from './js/api.js'
+    import { supabase } from './js/supabase.js'
     import { initAuthNav } from './js/nav-auth.js'
     const $ = (id) => document.getElementById(id)
     initAuthNav()
