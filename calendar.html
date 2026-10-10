@@ -7,11 +7,11 @@
 <body class="dashboard-page">
   <nav class="nav container"><a class="brand" href="./index.html"><span class="brand-mark">F</span><span>FUTSAL<span class="brand-light">KITA</span></span></a><div class="nav-links"><a href="./matchmaking.html">Matchmaking</a><a href="./index.html">Public site</a><button id="logoutButton" class="button button-small button-outline">Logout</button></div></nav>
   <main class="container dashboard-main">
-    <div class="dashboard-heading"><div><span class="eyebrow">PENGELOLAAN LAPANGAN</span><h1>Kalender booking</h1><p class="muted">Klik slot kosong untuk membuat booking, atau booking aktif untuk mengubah status dan pembayaran.</p></div><label class="date-control"><span>Tanggal booking</span><input id="bookingDate" type="date"></label></div>
+    <div class="dashboard-heading"><div><span class="eyebrow">PENGELOLAAN LAPANGAN</span><h1>Kalender booking</h1><p class="muted">Klik slot kosong untuk membuat booking, atau booking aktif untuk mengubah status dan pembayaran.</p></div><label class="date-control hidden"><span>Tanggal booking</span><input id="bookingDate" type="date"></label></div>
     <div id="pageMessage" class="notice">Memeriksa akses akun…</div>
-    <div class="booking-legend"><span><i class="legend-open"></i>Kosong</span><span><i class="legend-booked"></i>Terisi</span><span><i class="legend-paid"></i>Lunas</span><span><i class="legend-partial"></i>DP / sebagian</span></div>
-    <div id="calendarWrap" class="calendar-wrap"><div id="calendar" class="calendar-grid admin-calendar"></div></div>
-    <section class="panel admin-fields"><div><h2>Lapangan aktif</h2><p class="muted">Tarif per jam ditampilkan untuk membantu admin saat menerima booking.</p></div><div id="fieldSummary" class="field-summary"></div></section>
+    <div id="bookingLegend" class="booking-legend hidden"><span><i class="legend-open"></i>Kosong</span><span><i class="legend-booked"></i>Terisi</span><span><i class="legend-paid"></i>Lunas</span><span><i class="legend-partial"></i>DP / sebagian</span></div>
+    <div id="calendarWrap" class="calendar-wrap hidden"><div id="calendar" class="calendar-grid admin-calendar"></div></div>
+    <section id="adminFields" class="panel admin-fields hidden"><div><h2>Lapangan aktif</h2><p class="muted">Tarif per jam ditampilkan untuk membantu admin saat menerima booking.</p></div><div id="fieldSummary" class="field-summary"></div></section>
   </main>
   <div id="bookingModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><form id="bookingForm" class="modal-content modal-large">
     <button type="button" id="closeModal" class="modal-close" aria-label="Tutup">×</button><span class="eyebrow">BOOKING LAPANGAN</span><h2 id="modalTitle">Booking baru</h2><p id="selectedSlot" class="muted"></p>
@@ -149,8 +149,18 @@
         $('pageMessage').textContent='Akses ditolak. Akun ini belum memiliki role admin. Promosikan akun melalui SQL Editor Supabase, lalu login ulang.'
         $('calendarWrap').classList.add('hidden'); return
       }
+      $('bookingDate').parentElement.classList.remove('hidden')
+      $('bookingLegend').classList.remove('hidden')
+      $('calendarWrap').classList.remove('hidden')
+      $('adminFields').classList.remove('hidden')
       await load()
-    } catch(error) { $('pageMessage').textContent=error.message }
+    } catch(error) {
+      $('pageMessage').textContent=error.message || 'Tidak dapat memverifikasi akses akun.'
+      $('calendarWrap').classList.add('hidden')
+      $('bookingLegend').classList.add('hidden')
+      $('adminFields').classList.add('hidden')
+      $('bookingDate').parentElement.classList.add('hidden')
+    }
   </script>
 </body>
 </html>
