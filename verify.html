@@ -35,6 +35,9 @@
     const errorCode = params.get('error_code') || hash.get('error_code')
     const errorDescription = params.get('error_description') || hash.get('error_description')
     const hasSignupToken = hash.get('type') === 'signup' && Boolean(hash.get('access_token'))
+    const next = params.get('next')
+    const safeNext = /^(index\.html|matchmaking\.html|calendar\.html)(#booking-request)?$/.test(next || '') ? next : 'matchmaking.html'
+    loginLink.href = './login.html?verified=1&next=' + encodeURIComponent(safeNext)
 
     if (errorCode || errorDescription) {
       title.textContent = 'Tautan verifikasi bermasalah'
