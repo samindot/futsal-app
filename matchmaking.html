@@ -30,8 +30,9 @@
   <script type="module">
     import { supabase } from './js/supabase.js'
     import { getCurrentProfile, getMatchmakingSessions, createMatchmakingSession, joinMatchmakingSession, leaveMatchmakingSession } from './js/api.js'
-    import { logout } from './js/auth.js'
+    import { initAuthNav } from './js/nav-auth.js'
     const $ = id => document.getElementById(id)
+    initAuthNav()
     const localDate = (d = new Date()) => new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,10)
     const timeLabel = value => String(value).slice(0,5)
     let currentUser = null, profile = null, myJoined = new Set(), sessions = []
@@ -42,7 +43,6 @@
       $('createPanel').scrollIntoView({behavior:'smooth',block:'start'})
     })
     $('closeCreate').addEventListener('click', () => $('createPanel').classList.add('hidden'))
-    $('logoutButton').addEventListener('click', logout)
     function makeSessionCard(session) {
       const card=document.createElement('article'); card.className='session-card session-card-full'
       const top=document.createElement('div'); top.className='session-top'
@@ -142,17 +142,15 @@
       } finally {button.disabled=false;button.textContent='Publikasikan jadwal sparing →'}
     })
     try {
-      const {data:{user}}=await supabase.auth.getUser(); currentUser=user
-      if (user) {
-        const displayName = user.user_metadata?.display_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Pemain'
-        $('userGreeting').textContent = `Halo, ${displayName}!`
-        $('userGreeting').classList.remove('hidden')
-        profile=await getCurrentProfile()
-        $('loginLink').classList.add('hidden'); $('logoutButton').classList.remove('hidden')
-        if (profile?.role==='admin') $('adminLink').classList.remove('hidden')
+      const { data: { session }, error } = await supabase.auth.getSession()
+      if (error) throw error
+      currentUser = session?.user || null
+      if (currentUser) {
+        try { profile = await getCurrentProfile() }
+        catch (error) { console.warn('Could not load account profile', error) }
         $('createSessionButton').textContent='＋ Pasang jadwal sparing'
       }
-    } catch(error) { console.warn('Could not load account profile',error) }
+    } catch(error) { console.warn('Could not restore current session',error) }
     await loadSessions()
   </script>
 </body>
