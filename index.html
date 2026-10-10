@@ -73,24 +73,9 @@
 
   <script type="module">
     import { getFields, getPublicBookings, getMatchmakingSessions, requestBooking } from './js/api.js'
-    import { supabase } from './js/supabase.js'
-    import { logout } from './js/auth.js'
+    import { initAuthNav } from './js/nav-auth.js'
     const $ = (id) => document.getElementById(id)
-    $('logoutButton').addEventListener('click', logout)
-    try {
-      const { data: { session }, error } = await supabase.auth.getSession()
-      if (error) throw error
-      if (session) {
-        const { data: { user } } = await supabase.auth.getUser()
-        const displayName = user?.user_metadata?.display_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Pemain'
-        $('userGreeting').textContent = `Halo, ${displayName}!`
-        $('userGreeting').classList.remove('hidden')
-        $('loginLink').classList.add('hidden')
-        $('logoutButton').classList.remove('hidden')
-      }
-    } catch (error) {
-      console.warn('Could not check current session', error)
-    }
+    initAuthNav()
     const localDate = (d = new Date()) => {
       const offset = d.getTimezoneOffset() * 60000
       return new Date(d.getTime() - offset).toISOString().slice(0, 10)
