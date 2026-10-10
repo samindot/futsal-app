@@ -303,3 +303,17 @@ button:disabled { opacity: .58; cursor: not-allowed; }
 .booking-success-icon { display: grid; place-items: center; width: 62px; height: 62px; margin: 0 auto 18px; border-radius: 50%; background: #edf8e3; color: #477a32; font-size: 2rem; font-weight: 800; }
 .booking-success-note { padding: 13px 15px; border-radius: 12px; background: #f5f8f1; color: var(--ink-soft); font-size: .85rem; }
 body.modal-open { overflow: hidden; }
+
+
+/* Player landing page after login */
+.player-dashboard-intro { max-width: 760px; margin-bottom: 32px; }
+.player-dashboard-intro h1 { font-size: clamp(2.2rem, 4.5vw, 3.8rem); margin: 12px 0 16px; }
+.player-dashboard-intro p { max-width: 650px; color: var(--muted); font-size: 1.02rem; }
+.player-choice-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+.player-choice-card { display: flex; flex-direction: column; align-items: flex-start; min-height: 290px; padding: 30px; border: 1px solid var(--line); border-radius: 24px; background: white; box-shadow: var(--shadow); transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+.player-choice-card:hover { transform: translateY(-3px); border-color: #b8d2a8; box-shadow: 0 22px 55px rgba(21,43,30,.12); }
+.player-choice-icon { display: grid; place-items: center; width: 58px; height: 58px; margin-bottom: 26px; border-radius: 17px; background: #edf8e3; color: var(--green-dark); font-size: 1.75rem; }
+.player-choice-card h2 { font-size: clamp(1.45rem, 2.5vw, 2rem); margin-bottom: 12px; }
+.player-choice-card p { color: var(--muted); line-height: 1.75; }
+.player-choice-link { display: inline-flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 18px; color: var(--green-dark); font-weight: 700; }
+@media (max-width: 700px) { .player-choice-grid { grid-template-columns: 1fr; } .player-choice-card { min-height: 250px; padding: 24px; } }
