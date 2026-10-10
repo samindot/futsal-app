@@ -126,6 +126,8 @@
         const date=$('sessionDate').value, time=$('sessionTime').value, duration=Number($('sessionDuration').value)
         if (date<localDate()) throw new Error('Tanggal sesi tidak boleh di masa lalu.')
         if (!time || Number(time.slice(0,2))<8 || Number(time.slice(0,2))+duration>24) throw new Error('Jam dan durasi sesi tidak valid.')
+        const selectedStart = new Date(date + 'T' + time + ':00')
+        if (date===localDate() && selectedStart <= new Date()) throw new Error('Jam mulai sesi harus di masa depan.')
         await createMatchmakingSession({
           title:$('sessionTitle').value.trim(), venue:$('sessionVenue').value.trim(),
           session_date:date, start_time:time, duration_hours:duration,
