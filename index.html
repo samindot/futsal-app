@@ -44,7 +44,11 @@
       <div id="availabilityState" class="notice">Memuat ketersediaan…</div>
       <div id="courtList" class="court-list"></div>
       <div class="availability-legend"><span><i class="legend-open"></i>Tersedia</span><span><i class="legend-booked"></i>Terisi</span><span class="muted">Permintaan booking menunggu konfirmasi pengelola.</span></div>
-      <section id="booking-request" class="panel request-panel">
+      <section id="booking-login-required" class="panel request-panel">
+        <div class="panel-heading"><div><span class="eyebrow">BOOKING LAPANGAN</span><h2>Login untuk booking</h2><p class="muted">Jadwal lapangan bisa dilihat publik, tetapi permintaan booking hanya tersedia untuk pengguna yang sudah login.</p></div></div>
+        <a id="bookingLoginLink" class="button button-accent" href="./login.html?next=index.html%23booking-request">Login / Daftar untuk Booking →</a>
+      </section>
+      <section id="booking-request" class="panel request-panel hidden">
         <div class="panel-heading"><div><span class="eyebrow">BOOKING LAPANGAN</span><h2>Pilih slot yang kamu inginkan</h2><p class="muted">Kirim permintaan booking. Slot baru terkonfirmasi setelah pengelola menyetujui jadwal dan pembayaran.</p></div></div>
         <form id="requestBookingForm">
           <div class="form-grid">
@@ -78,6 +82,22 @@
     import { initAuthNav } from './js/nav-auth.js'
     const $ = (id) => document.getElementById(id)
     initAuthNav()
+
+    function setBookingAccess(session) {
+      const loggedIn = Boolean(session?.user)
+      $('booking-request').classList.toggle('hidden', !loggedIn)
+      $('booking-login-required').classList.toggle('hidden', loggedIn)
+    }
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (error) console.warn('Could not check booking session', error)
+      setBookingAccess(data?.session || null)
+    }).catch(error => {
+      console.warn('Could not check booking session', error)
+      setBookingAccess(null)
+    })
+    supabase.auth.onAuthStateChange((_event, session) => {
+      setBookingAccess(session)
+    })
     const localDate = (d = new Date()) => {
       const offset = d.getTimezoneOffset() * 60000
       return new Date(d.getTime() - offset).toISOString().slice(0, 10)
@@ -221,13 +241,11 @@
       const button=$('requestSubmit'); button.disabled=true; button.textContent='Mengirim…'
       const message=$('requestMessage'); message.className='form-message'; message.textContent=''
       try{
-        const {data:{user},error:authError}=await supabase.auth.getUser()
-        if(authError) throw authError
-        if(!user){
-          message.textContent='Login atau daftar dulu untuk mengirim permintaan booking.'
-          message.className='form-message error'
-          const link=document.createElement('a'); link.href='./login.html?next=index.html%23booking-request'; link.className='text-link'; link.textContent='Login / daftar →'; message.append(' ',link)
-          return
+        const { data: { session }, error: authError } = await supabase.auth.getSession()
+        if (authError) throw authError
+        if (!session?.user) {
+          setBookingAccess(null)
+          throw new Error('Sesi login tidak ditemukan. Silakan login kembali untuk mengirim booking.')
         }
         await requestBooking({
           p_field_id:$('requestField').value,p_date:dateInput.value,p_start:$('requestStart').value,
