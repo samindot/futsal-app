@@ -52,11 +52,14 @@ export async function register(email, password, displayName) {
   return { confirmationRequired: false }
 }
 
-export async function requireAuth() {
+export async function requireAuth(next = 'calendar.html') {
   const { data, error } = await supabase.auth.getSession()
   if (error) throw error
   if (!data.session) {
-    window.location.replace('./login.html')
+    const safeNext = /^(index\.html|matchmaking\.html|calendar\.html)(#booking-request)?$/.test(next)
+      ? next
+      : 'matchmaking.html'
+    window.location.replace('./login.html?next=' + encodeURIComponent(safeNext))
     return false
   }
   return true
