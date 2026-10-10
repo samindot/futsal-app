@@ -18,6 +18,7 @@
     </div>
   </nav>
   <main class="container dashboard-main">
+    <section id="playerDashboard">
     <section class="player-dashboard-intro">
       <span class="eyebrow">AREA PEMAIN</span>
       <h1 id="welcomeTitle">Book? Atau cari lawan?</h1>
@@ -39,10 +40,35 @@
         <span class="player-choice-link">Cari lawan sparing <span aria-hidden="true">→</span></span>
       </a>
     </section>
+    </section>
+    <section id="adminDashboard" class="hidden">
+      <section class="player-dashboard-intro">
+        <span class="eyebrow">PANEL PENGELOLA</span>
+        <h1 id="adminWelcomeTitle">Dashboard Pengelola</h1>
+        <p>Kelola operasional lapangan dan booking dari sini. Halaman ini khusus untuk pengelola, terpisah dari navigasi pemain.</p>
+      </section>
+      <section class="player-choice-grid" aria-label="Menu pengelola">
+        <a class="player-choice-card admin-choice-primary" href="./calendar.html">
+          <span class="player-choice-icon" aria-hidden="true">▦</span>
+          <span class="eyebrow">OPERASIONAL</span>
+          <h2>Kalender & Booking</h2>
+          <p>Lihat jadwal semua lapangan, buat booking, perbarui status, catat pembayaran, dan atur tarif per jam.</p>
+          <span class="player-choice-link">Buka kalender booking <span aria-hidden="true">→</span></span>
+        </a>
+        <a class="player-choice-card" href="./index.html#availability">
+          <span class="player-choice-icon" aria-hidden="true">↗</span>
+          <span class="eyebrow">HALAMAN PUBLIK</span>
+          <h2>Lihat Halaman Pemain</h2>
+          <p>Periksa tampilan ketersediaan lapangan yang dilihat pelanggan dan alur pengajuan booking.</p>
+          <span class="player-choice-link">Buka halaman publik <span aria-hidden="true">→</span></span>
+        </a>
+      </section>
+    </section>
   </main>
   <footer class="footer"><div class="container footer-inner"><a class="brand" href="./dashboard.html"><span class="brand-mark">F</span><span>FUTSAL<span class="brand-light">KITA</span></span></a><span>Pilih aktivitas dan mulai atur pertandinganmu.</span><a href="./index.html">Beranda ↗</a></div></footer>
   <script type="module">
     import { supabase } from './js/supabase.js'
+    import { getCurrentProfile } from './js/api.js'
     import { initAuthNav } from './js/nav-auth.js'
     initAuthNav()
     const { data, error } = await supabase.auth.getSession()
@@ -51,7 +77,17 @@
     } else {
       const user = data.session.user
       const name = user.user_metadata?.display_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Pemain'
-      document.getElementById('welcomeTitle').textContent = 'Book? Atau cari lawan, ' + name + '?'
+      const profile = await getCurrentProfile()
+      if (profile?.role === 'admin') {
+        document.getElementById('playerDashboard').classList.add('hidden')
+        document.getElementById('adminDashboard').classList.remove('hidden')
+        document.getElementById('adminWelcomeTitle').textContent = 'Dashboard Pengelola, ' + name
+        document.querySelector('.footer-inner > span').textContent = 'Panel operasional FutsalKita.'
+        document.querySelector('.footer-inner > a:last-child').href = './calendar.html'
+        document.querySelector('.footer-inner > a:last-child').textContent = 'Kalender booking ↗'
+      } else {
+        document.getElementById('welcomeTitle').textContent = 'Book? Atau cari lawan, ' + name + '?'
+      }
     }
   </script>
 </body>
