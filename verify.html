@@ -36,7 +36,7 @@
     const errorDescription = params.get('error_description') || hash.get('error_description')
     const hasSignupToken = hash.get('type') === 'signup' && Boolean(hash.get('access_token'))
     const next = params.get('next')
-    const safeNext = /^(index\.html|matchmaking\.html|calendar\.html)(#booking-request)?$/.test(next || '') ? next : 'matchmaking.html'
+    const safeNext = /^(index\.html|matchmaking\.html|calendar\.html|dashboard\.html)(#booking-request)?$/.test(next || '') ? next : 'dashboard.html'
     loginLink.href = './login.html?verified=1&next=' + encodeURIComponent(safeNext)
 
     if (errorCode || errorDescription) {
