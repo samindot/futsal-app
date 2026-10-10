@@ -52,6 +52,7 @@
             <label class="form-field">Jam mulai<select id="requestStart" required></select></label>
             <label class="form-field">Durasi<select id="requestDuration"><option value="1">1 jam</option><option value="2" selected>2 jam</option><option value="3">3 jam</option><option value="4">4 jam</option><option value="5">5 jam</option><option value="6">6 jam</option><option value="7">7 jam</option><option value="8">8 jam</option></select></label>
             <label class="form-field">Nama pemesan<input id="requestName" maxlength="100" placeholder="Nama kamu" required></label>
+            <label class="form-field">No. WhatsApp<input id="requestWhatsApp" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="Contoh: 081234567890" required></label>
             <label class="form-field form-field-full">Catatan (opsional)<input id="requestNotes" maxlength="500" placeholder="Jumlah pemain, permintaan khusus, dll."></label>
           </div>
           <p id="requestMessage" class="form-message" role="status"></p>
@@ -230,7 +231,7 @@
         await requestBooking({
           p_field_id:$('requestField').value,p_date:dateInput.value,p_start:$('requestStart').value,
           p_duration:Number($('requestDuration').value),p_customer_name:$('requestName').value.trim(),
-          p_notes:$('requestNotes').value.trim() || null
+          p_whatsapp_number:$('requestWhatsApp').value.trim(),p_notes:$('requestNotes').value.trim() || null
         })
         message.textContent='Permintaan booking terkirim. Status awal: menunggu konfirmasi pengelola.'
         message.className='form-message success'
