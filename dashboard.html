@@ -20,7 +20,7 @@
   <main class="container dashboard-main">
     <section class="player-dashboard-intro">
       <span class="eyebrow">AREA PEMAIN</span>
-      <h1 id="welcomeTitle">Mau main yang mana hari ini?</h1>
+      <h1 id="welcomeTitle">Book? Atau cari lawan?</h1>
       <p>Pilih kebutuhanmu untuk melanjutkan. Kamu bisa memesan lapangan untuk tim sendiri atau mencari tim lawan untuk sparing.</p>
     </section>
     <section class="player-choice-grid" aria-label="Pilih aktivitas">
@@ -51,7 +51,7 @@
     } else {
       const user = data.session.user
       const name = user.user_metadata?.display_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Pemain'
-      document.getElementById('welcomeTitle').textContent = 'Mau main yang mana, ' + name + '?'
+      document.getElementById('welcomeTitle').textContent = 'Book? Atau cari lawan, ' + name + '?'
     }
   </script>
 </body>
