@@ -293,3 +293,13 @@ button:disabled { opacity: .58; cursor: not-allowed; }
 /* Signed-in navbar greeting */
 .nav-greeting { color: var(--green-dark); font-size: .82rem; font-weight: 750; white-space: nowrap; }
 @media (max-width: 680px) { .nav-greeting { font-size: .72rem; } }
+
+
+/* Booking submission confirmation modal */
+.booking-success-modal { text-align: center; }
+.booking-success-modal .eyebrow { justify-content: center; }
+.booking-success-modal h2 { padding: 0 12px; }
+.booking-success-modal > p { line-height: 1.7; }
+.booking-success-icon { display: grid; place-items: center; width: 62px; height: 62px; margin: 0 auto 18px; border-radius: 50%; background: #edf8e3; color: #477a32; font-size: 2rem; font-weight: 800; }
+.booking-success-note { padding: 13px 15px; border-radius: 12px; background: #f5f8f1; color: var(--ink-soft); font-size: .85rem; }
+body.modal-open { overflow: hidden; }
