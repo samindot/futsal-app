@@ -45,11 +45,18 @@ export async function register(email, password, displayName) {
     }
   })
   if (error) throw error
-  if (!data.session) {
-    return { confirmationRequired: true }
+
+  // Supabase may return a session when email confirmation is disabled.
+  // Registration must not implicitly sign the user into the app.
+  if (data.session) {
+    const { error: signOutError } = await supabase.auth.signOut({ scope: 'local' })
+    if (signOutError) throw signOutError
   }
-  window.location.href = getRedirectTarget()
-  return { confirmationRequired: false }
+
+  return {
+    accountCreated: true,
+    confirmationRequired: !data.session
+  }
 }
 
 export async function requireAuth(next = 'calendar.html') {
