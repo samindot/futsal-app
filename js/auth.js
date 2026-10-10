@@ -13,7 +13,9 @@ function getAbsoluteRedirectTarget() {
 }
 
 function getVerificationRedirect() {
-  return new URL('./verify.html', window.location.href).href
+  const url = new URL('./verify.html', window.location.href)
+  url.searchParams.set('next', new URLSearchParams(window.location.search).get('next') || 'matchmaking.html')
+  return url.href
 }
 
 export async function login(email, password) {
@@ -61,6 +63,7 @@ export async function requireAuth() {
 }
 
 export async function logout() {
-  await supabase.auth.signOut()
-  window.location.href = './index.html'
+  const { error } = await supabase.auth.signOut()
+  if (error) throw error
+  window.location.replace('./index.html')
 }
