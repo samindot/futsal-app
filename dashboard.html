@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10251d">
+  <title>Pilih Aktivitas — FutsalKita</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body class="dashboard-page">
+  <nav class="nav container">
+    <a class="brand" href="./dashboard.html"><span class="brand-mark">F</span><span>FUTSAL<span class="brand-light">KITA</span></span></a>
+    <div class="nav-links">
+      <span id="userGreeting" class="nav-greeting hidden"></span>
+      <a id="adminLink" class="hidden" href="./calendar.html">Kalender admin</a>
+      <a id="loginLink" class="button button-small button-dark" href="./login.html">Login / Daftar</a>
+      <button id="logoutButton" class="button button-small button-outline hidden" type="button">Logout</button>
+    </div>
+  </nav>
+  <main class="container dashboard-main">
+    <section class="player-dashboard-intro">
+      <span class="eyebrow">AREA PEMAIN</span>
+      <h1 id="welcomeTitle">Mau main yang mana hari ini?</h1>
+      <p>Pilih kebutuhanmu untuk melanjutkan. Kamu bisa memesan lapangan untuk tim sendiri atau mencari tim lawan untuk sparing.</p>
+    </section>
+    <section class="player-choice-grid" aria-label="Pilih aktivitas">
+      <a class="player-choice-card" href="./index.html#availability">
+        <span class="player-choice-icon" aria-hidden="true">⚽</span>
+        <span class="eyebrow">BOOKING LAPANGAN</span>
+        <h2>Booking Lapangan</h2>
+        <p>Lihat jadwal yang tersedia, pilih lapangan dan waktu bermain, lalu kirim permintaan booking kepada pengelola.</p>
+        <span class="player-choice-link">Lihat jadwal lapangan <span aria-hidden="true">→</span></span>
+      </a>
+      <a class="player-choice-card" href="./matchmaking.html">
+        <span class="player-choice-icon" aria-hidden="true">↔</span>
+        <span class="eyebrow">TEAM MATCHMAKING</span>
+        <h2>Team Matchmaking</h2>
+        <p>Temukan tawaran sparing dari tim lain atau pasang jadwal tim kamu untuk mencari lawan tanding.</p>
+        <span class="player-choice-link">Cari lawan sparing <span aria-hidden="true">→</span></span>
+      </a>
+    </section>
+  </main>
+  <footer class="footer"><div class="container footer-inner"><a class="brand" href="./dashboard.html"><span class="brand-mark">F</span><span>FUTSAL<span class="brand-light">KITA</span></span></a><span>Pilih aktivitas dan mulai atur pertandinganmu.</span><a href="./index.html">Beranda ↗</a></div></footer>
+  <script type="module">
+    import { supabase } from './js/supabase.js'
+    import { initAuthNav } from './js/nav-auth.js'
+    initAuthNav()
+    const { data, error } = await supabase.auth.getSession()
+    if (error || !data?.session) {
+      window.location.replace('./login.html?next=dashboard.html')
+    } else {
+      const user = data.session.user
+      const name = user.user_metadata?.display_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Pemain'
+      document.getElementById('welcomeTitle').textContent = 'Mau main yang mana, ' + name + '?'
+    }
+  </script>
+</body>
+</html>
