@@ -2,10 +2,10 @@ import { supabase } from './supabase.js'
 
 function getRedirectTarget() {
   const params = new URLSearchParams(window.location.search)
-  const next = params.get('next') || 'matchmaking.html'
-  return /^(index\.html|matchmaking\.html|calendar\.html)(#booking-request)?$/.test(next)
+  const next = params.get('next') || 'dashboard.html'
+  return /^(index\.html|matchmaking\.html|calendar\.html|dashboard\.html)(#booking-request)?$/.test(next)
     ? './' + next
-    : './matchmaking.html'
+    : './dashboard.html'
 }
 
 function getAbsoluteRedirectTarget() {
@@ -14,7 +14,7 @@ function getAbsoluteRedirectTarget() {
 
 function getVerificationRedirect() {
   const url = new URL('./verify.html', window.location.href)
-  url.searchParams.set('next', new URLSearchParams(window.location.search).get('next') || 'matchmaking.html')
+  url.searchParams.set('next', new URLSearchParams(window.location.search).get('next') || 'dashboard.html')
   return url.href
 }
 
@@ -63,9 +63,9 @@ export async function requireAuth(next = 'calendar.html') {
   const { data, error } = await supabase.auth.getSession()
   if (error) throw error
   if (!data.session) {
-    const safeNext = /^(index\.html|matchmaking\.html|calendar\.html)(#booking-request)?$/.test(next)
+    const safeNext = /^(index\.html|matchmaking\.html|calendar\.html|dashboard\.html)(#booking-request)?$/.test(next)
       ? next
-      : 'matchmaking.html'
+      : 'dashboard.html'
     window.location.replace('./login.html?next=' + encodeURIComponent(safeNext))
     return false
   }
