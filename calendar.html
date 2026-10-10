@@ -21,12 +21,26 @@
     <div id="editStatusWrap" class="form-field hidden"><label for="bookingStatus">Status booking</label><select id="bookingStatus"><option value="confirmed">Confirmed</option><option value="pending">Pending</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></div>
     <p id="modalMessage" class="form-message" role="status"></p><div class="modal-actions"><button type="button" id="cancelModal" class="button button-outline">Tutup</button><button type="submit" id="saveBooking" class="button button-accent">Simpan booking</button></div>
   </form></div>
+  <script>
+    // Surface script/module failures instead of leaving the page stuck on the initial status.
+    window.addEventListener('error', event => {
+      const message = document.getElementById('pageMessage')
+      if (message && message.textContent === 'Memeriksa akses akun…') {
+        message.textContent = 'Error JavaScript: ' + (event.message || 'Gagal memuat script. Periksa koneksi atau CDN.')
+      }
+    })
+    window.addEventListener('unhandledrejection', event => {
+      const message = document.getElementById('pageMessage')
+      if (message && message.textContent === 'Memeriksa akses akun…') {
+        message.textContent = 'Error proses autentikasi: ' + (event.reason?.message || String(event.reason || 'Unknown error'))
+      }
+    })
+  </script>
   <script type="module">
     import { requireAuth } from './js/auth.js'
     import { initAuthNav } from './js/nav-auth.js'
     import { getCurrentProfile, getFields, getBookings, createBooking, updateBooking } from './js/api.js'
     const $ = id => document.getElementById(id)
-    initAuthNav()
     const localDate = (d = new Date()) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0,10)
     const money = n => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(n || 0)
     let fields = [], bookings = [], selectedField = null, selectedHour = null, editing = null
@@ -136,7 +150,10 @@
       } finally { $('saveBooking').disabled=false }
     })
     try {
+      initAuthNav()
+      $('pageMessage').textContent = 'Memeriksa sesi login…'
       if (!await requireAuth()) throw new Error('Silakan login sebagai admin.')
+      $('pageMessage').textContent = 'Memeriksa role admin…'
       const profile=await getCurrentProfile()
       if (!profile || profile.role!=='admin') {
         $('pageMessage').textContent='Akses ditolak. Akun ini belum memiliki role admin. Promosikan akun melalui SQL Editor Supabase, lalu login ulang.'
