@@ -38,11 +38,13 @@ export function initAuthNav() {
 
     if (adminLink) {
       const requestId = ++profileRequest
-      getCurrentProfile().then(profile => {
-        if (requestId === profileRequest && profile?.role === 'admin') {
-          adminLink.classList.remove('hidden')
-        }
-      }).catch(error => console.warn('Could not load account role', error))
+      queueMicrotask(() => {
+        getCurrentProfile().then(profile => {
+          if (requestId === profileRequest && profile?.role === 'admin') {
+            adminLink.classList.remove('hidden')
+          }
+        }).catch(error => console.warn('Could not load account role', error))
+      })
     }
   }
 
