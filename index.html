@@ -51,7 +51,7 @@
           <span class="eyebrow">PERMINTAAN TERKIRIM</span>
           <h2 id="bookingSuccessTitle">Booking kamu sedang menunggu konfirmasi</h2>
           <p id="bookingSuccessMessage" class="muted">Permintaan booking terkirim. Status awal: menunggu konfirmasi pengelola.</p>
-          <p class="booking-success-note">Pengelola akan memeriksa jadwal dan pembayaran sebelum booking dikonfirmasi.</p>
+          <p id="bookingSuccessNote" class="booking-success-note">Pengelola akan memeriksa jadwal dan pembayaran sebelum booking dikonfirmasi.</p>
           <button id="bookingSuccessDone" class="button button-accent button-wide" type="button">Mengerti</button>
         </div>
       </div>
@@ -69,6 +69,7 @@
             <label class="form-field">Nama pemesan<input id="requestName" maxlength="100" placeholder="Nama kamu" required></label>
             <label class="form-field">No. WhatsApp<input id="requestWhatsApp" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="Contoh: 081234567890" required></label>
             <label class="form-field form-field-full">Catatan (opsional)<input id="requestNotes" maxlength="500" placeholder="Jumlah pemain, permintaan khusus, dll."></label>
+            <label class="sparing-toggle form-field-full"><input id="publishSparing" type="checkbox"><span><strong>Sekalian cari lawan sparing</strong><small>Jadwal, lapangan, tanggal, jam, dan durasi akan diambil otomatis dari booking ini. Nama pemesan menjadi judul sesi; level default semua level dan kapasitas 10 pemain.</small></span></label>
           </div>
           <p id="requestMessage" class="form-message" role="status"></p>
           <button id="requestSubmit" class="button button-accent" type="submit">Kirim Permintaan Booking →</button>
@@ -88,7 +89,7 @@
   <footer class="footer"><div class="container footer-inner"><a class="brand" href="./index.html"><span class="brand-mark">F</span><span>FUTSAL<span class="brand-light">KITA</span></span></a><span>Temukan lapangan. Temukan lawan tanding.</span><a href="./matchmaking.html">Cari lawan sparing ↗</a></div></footer>
 
   <script type="module">
-    import { getFields, getPublicBookings, getMatchmakingSessions, requestBooking } from './js/api.js'
+    import { getFields, getPublicBookings, getMatchmakingSessions, requestBooking, createMatchmakingSession } from './js/api.js'
     import { supabase } from './js/supabase.js'
     import { initAuthNav } from './js/nav-auth.js'
     const $ = (id) => document.getElementById(id)
@@ -115,6 +116,7 @@
     }
     const dateInput = $('bookingDate')
     let dayBookings = []
+    let activeFields = []
     dateInput.value = localDate()
     dateInput.min = localDate()
     const timeLabel = (time) => String(time).slice(0, 5)
@@ -212,6 +214,7 @@
       }
     }
     function populateRequestForm(fields, bookings) {
+      activeFields = fields
       const select=$('requestField'), previous=select.value
       select.replaceChildren()
       fields.forEach(field=>{
@@ -277,17 +280,51 @@
           setBookingAccess(null)
           throw new Error('Sesi login tidak ditemukan. Silakan login kembali untuk mengirim booking.')
         }
+        const bookingDate = dateInput.value
+        const bookingTime = $('requestStart').value
+        const bookingDuration = Number($('requestDuration').value)
+        const customerName = $('requestName').value.trim()
+        const field = activeFields.find(item => item.id === $('requestField').value)
         await requestBooking({
-          p_field_id:$('requestField').value,p_date:dateInput.value,p_start:$('requestStart').value,
-          p_duration:Number($('requestDuration').value),p_customer_name:$('requestName').value.trim(),
+          p_field_id:$('requestField').value,p_date:bookingDate,p_start:bookingTime,
+          p_duration:bookingDuration,p_customer_name:customerName,
           p_whatsapp_number:$('requestWhatsApp').value.trim(),p_notes:$('requestNotes').value.trim() || null
         })
+        let sparingPublished = false
+        let sparingError = null
+        if ($('publishSparing').checked) {
+          try {
+            if (!field) throw new Error('Data lapangan tidak ditemukan. Muat ulang halaman lalu coba lagi.')
+            await createMatchmakingSession({
+              title: (customerName + ' mencari lawan sparing').slice(0, 100),
+              venue: (field.name + (field.location ? ' · ' + field.location : '')).slice(0, 160),
+              session_date: bookingDate,
+              start_time: bookingTime,
+              duration_hours: bookingDuration,
+              skill_level: 'any',
+              max_players: 10,
+              notes: 'Sesi dibuat otomatis dari permintaan booking. Konfirmasi lapangan tetap menunggu pengelola.'
+            })
+            sparingPublished = true
+          } catch (error) {
+            sparingError = error
+            console.error('Booking submitted, but sparing session could not be published', error)
+          }
+        }
         message.textContent='Permintaan booking terkirim. Status awal: menunggu konfirmasi pengelola.'
         message.className='form-message success'
-        $('bookingSuccessMessage').textContent='Permintaan booking untuk ' + $('requestField').selectedOptions[0].textContent.split(' · ')[0] + ' pada ' + new Date(dateInput.value + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + ' pukul ' + $('requestStart').value + ' berhasil dikirim. Status awal: menunggu konfirmasi pengelola.'
+        $('bookingSuccessMessage').textContent='Permintaan booking untuk ' + (field?.name || $('requestField').selectedOptions[0].textContent.split(' · ')[0]) + ' pada ' + new Date(bookingDate + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + ' pukul ' + bookingTime + ' berhasil dikirim. Status awal: menunggu konfirmasi pengelola.'
+        const successNote = $('bookingSuccessNote')
+        if (sparingPublished) {
+          successNote.textContent = 'Booking terkirim dan jadwal sparing juga sudah dipublikasikan. Pengelola tetap perlu mengonfirmasi booking lapangan.'
+        } else if ($('publishSparing').checked && sparingError) {
+          successNote.textContent = 'Booking berhasil dikirim, tetapi jadwal sparing belum terbit (' + (sparingError.message || 'terjadi kesalahan') + '). Kamu bisa memasang jadwalnya dari menu Team Matchmaking.'
+        } else {
+          successNote.textContent = 'Pengelola akan memeriksa jadwal dan pembayaran sebelum booking dikonfirmasi.'
+        }
         $('requestNotes').value=''
         showBookingSuccessModal()
-        await loadAvailability()
+        await Promise.all([loadAvailability(), sparingPublished ? loadSessions() : Promise.resolve()])
       }catch(error){
         message.textContent=error.message || 'Gagal mengirim permintaan booking.'
         message.className='form-message error'
