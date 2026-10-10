@@ -13,10 +13,16 @@ export async function getFields() {
   )
 }
 
+export async function updateFieldHourlyRate(id, hourlyRate) {
+  return unwrap(
+    supabase.from('fields').update({ hourly_rate: hourlyRate }).eq('id', id).select('id,name,hourly_rate').single()
+  )
+}
+
 export async function getBookings(date) {
   return unwrap(
     supabase.from('bookings')
-      .select('id,field_id,booking_date,start_time,duration_hours,customer_name,amount_paid,notes,status')
+      .select('id,field_id,booking_date,start_time,duration_hours,customer_name,whatsapp_number,amount_paid,notes,status')
       .eq('booking_date', date).neq('status', 'cancelled').order('start_time')
   )
 }
