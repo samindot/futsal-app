@@ -30,7 +30,15 @@
     let fields = [], bookings = [], selectedField = null, selectedHour = null, editing = null
     const dateInput = $('bookingDate')
     dateInput.value = localDate(); dateInput.min = localDate()
-    $('logoutButton').addEventListener('click', logout)
+    $('logoutButton').addEventListener('click', async () => {
+      $('logoutButton').disabled = true
+      try { await logout() }
+      catch (error) {
+        console.error('Logout failed', error)
+        $('pageMessage').textContent = 'Logout belum berhasil. Periksa koneksi lalu coba lagi.'
+        $('logoutButton').disabled = false
+      }
+    })
     function closeModal() { $('bookingModal').classList.add('hidden'); editing = null }
     $('closeModal').addEventListener('click', closeModal)
     $('cancelModal').addEventListener('click', closeModal)
