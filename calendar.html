@@ -156,8 +156,7 @@
       $('pageMessage').textContent = 'Memeriksa role admin…'
       const profile=await getCurrentProfile()
       if (!profile || profile.role!=='admin') {
-        $('pageMessage').textContent='Akses ditolak. Akun ini belum memiliki role admin. Promosikan akun melalui SQL Editor Supabase, lalu login ulang.'
-        $('calendarWrap').classList.add('hidden'); return
+        throw new Error('Akses ditolak. Akun ini belum memiliki role admin. Pastikan role di tabel public.profiles sudah admin, lalu login ulang.')
       }
       $('bookingDate').parentElement.classList.remove('hidden')
       $('bookingLegend').classList.remove('hidden')
