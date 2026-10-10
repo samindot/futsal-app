@@ -1,172 +1,159 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="id">
 <head>
-  <link rel="stylesheet" href="./css/style.css">
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kalender Booking — FutsalKita</title><link rel="stylesheet" href="./css/style.css">
 </head>
-<body>
-
-<div class="app">
-  <aside class="sidebar">
-    <h2>Futsal Admin</h2>
-    <button onclick="logout()">Logout</button>
-  </aside>
-
-  <main class="main">
-
-    <!-- MODAL -->
-    <div id="bookingModal" class="modal hidden">
-      <div class="modal-content">
-        <h3>New Booking</h3>
-
-        <p id="selectedSlot"></p>
-
-        <input id="customer_name" placeholder="Nama" />
-
-        <div class="duration">
-          <button onclick="setDuration(1, this)">1 Jam</button>
-          <button onclick="setDuration(2, this)" class="active">2 Jam</button>
-          <button onclick="setDuration(3, this)">3 Jam</button>
-        </div>
-
-        <input id="amount_paid" type="number" placeholder="DP / Bayar" />
-
-        <button onclick="submitBooking()">Save</button>
-        <button onclick="closeModal()">Cancel</button>
-      </div>
-    </div>
-
-    <div class="header">
-      <h2>Booking Calendar</h2>
-    </div>
-
-    <div id="calendar" class="calendar-grid"></div>
+<body class="dashboard-page">
+  <nav class="nav container"><a class="brand" href="./index.html"><span class="brand-mark">F</span><span>FUTSAL<span class="brand-light">KITA</span></span></a><div class="nav-links"><a href="./index.html#availability">Booking lapangan</a><span id="userGreeting" class="nav-greeting hidden"></span><a id="loginLink" class="button button-small button-dark" href="./login.html?next=calendar.html">Login / Daftar</a><button id="logoutButton" class="button button-small button-outline hidden" type="button">Logout</button></div></nav>
+  <main class="container dashboard-main">
+    <div class="dashboard-heading"><div><span class="eyebrow">PENGELOLAAN LAPANGAN</span><h1>Kalender booking</h1><p class="muted">Klik slot kosong untuk membuat booking, atau booking aktif untuk mengubah status dan pembayaran.</p></div><label class="date-control hidden"><span>Tanggal booking</span><input id="bookingDate" type="date"></label></div>
+    <div id="pageMessage" class="notice">Memeriksa akses akun…</div>
+    <div id="bookingLegend" class="booking-legend hidden"><span><i class="legend-open"></i>Kosong</span><span><i class="legend-booked"></i>Terisi</span><span><i class="legend-paid"></i>Lunas</span><span><i class="legend-partial"></i>DP / sebagian</span></div>
+    <div id="calendarWrap" class="calendar-wrap hidden"><div id="calendar" class="calendar-grid admin-calendar"></div></div>
+    <section id="adminFields" class="panel admin-fields hidden"><div><h2>Lapangan aktif</h2><p class="muted">Tarif per jam ditampilkan untuk membantu admin saat menerima booking.</p></div><div id="fieldSummary" class="field-summary"></div></section>
   </main>
-</div>
-
-<script type="module">
-import { requireAuth, logout } from './js/auth.js'
-import { getBookings, createBooking, getFields } from './js/api.js'
-
-let selectedField = null
-let selectedHour = null
-let selectedDuration = 2
-
-window.logout = logout
-
-await requireAuth()
-
-const today = new Date().toISOString().split('T')[0]
-
-// ✅ ambil dari DB
-const fields = await getFields()
-const bookings = await getBookings(today)
-
-const calendar = document.getElementById('calendar')
-
-// HEADER
-calendar.innerHTML = `<div class="time-col"></div>` +
-  fields.map(f => `<div class="col-header">${f.name}</div>`).join('')
-
-// GRID
-for (let hour = 8; hour <= 22; hour++) {
-  calendar.innerHTML += `<div class="time-col">${hour}:00</div>`
-
-  fields.forEach(field => {
-    const booking = bookings.find(b =>
-      b.field_id === field.id &&
-      hour >= b.start_time &&
-      hour < b.end_time
-    )
-
-    let className = 'slot'
-    if (booking) className += ' ' + booking.payment_status
-
-    const slot = document.createElement('div')
-    slot.className = className
-
-    if (!booking) {
-      slot.innerText = '+'
-
-      slot.onclick = () => {
-        selectedField = field.id
-        selectedHour = hour
-
-        // reset form
-        document.getElementById('customer_name').value = ''
-        document.getElementById('amount_paid').value = ''
-
-        selectedDuration = 2
-
-        document.querySelectorAll('.duration button')
-          .forEach(btn => btn.classList.remove('active'))
-
-        document.querySelectorAll('.duration button')[1]
-          .classList.add('active')
-
-        document.getElementById('selectedSlot').innerText =
-          `${field.name} - ${hour}:00`
-
-        document.getElementById('bookingModal')
-          .classList.remove('hidden')
-      }
-
-    } else {
-      slot.innerText = booking.payment_status
-
-      // (next step: edit booking)
-      slot.onclick = () => {
-        alert('Edit booking (next step)')
-      }
+  <div id="bookingModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><form id="bookingForm" class="modal-content modal-large">
+    <button type="button" id="closeModal" class="modal-close" aria-label="Tutup">×</button><span class="eyebrow">BOOKING LAPANGAN</span><h2 id="modalTitle">Booking baru</h2><p id="selectedSlot" class="muted"></p>
+    <div class="form-grid"><label class="form-field">Nama pelanggan<input id="customerName" required maxlength="100" placeholder="Nama pelanggan"></label><label class="form-field">Pembayaran awal (Rp)<input id="amountPaid" type="number" min="0" step="1000" value="0" required></label>
+    <label class="form-field">Durasi<select id="duration"><option value="1">1 jam</option><option value="2" selected>2 jam</option><option value="3">3 jam</option><option value="4">4 jam</option><option value="5">5 jam</option><option value="6">6 jam</option><option value="7">7 jam</option><option value="8">8 jam</option></select></label>
+    <label class="form-field">Catatan<input id="notes" maxlength="500" placeholder="Opsional"></label></div>
+    <div id="editStatusWrap" class="form-field hidden"><label for="bookingStatus">Status booking</label><select id="bookingStatus"><option value="confirmed">Confirmed</option><option value="pending">Pending</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></div>
+    <p id="modalMessage" class="form-message" role="status"></p><div class="modal-actions"><button type="button" id="cancelModal" class="button button-outline">Tutup</button><button type="submit" id="saveBooking" class="button button-accent">Simpan booking</button></div>
+  </form></div>
+  <script type="module">
+    import { requireAuth } from './js/auth.js'
+    import { initAuthNav } from './js/nav-auth.js'
+    import { getCurrentProfile, getFields, getBookings, createBooking, updateBooking } from './js/api.js'
+    const $ = id => document.getElementById(id)
+    initAuthNav()
+    const localDate = (d = new Date()) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0,10)
+    const money = n => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(n || 0)
+    let fields = [], bookings = [], selectedField = null, selectedHour = null, editing = null
+    const dateInput = $('bookingDate')
+    dateInput.value = localDate(); dateInput.min = localDate()
+    function closeModal() { $('bookingModal').classList.add('hidden'); editing = null }
+    $('closeModal').addEventListener('click', closeModal)
+    $('cancelModal').addEventListener('click', closeModal)
+    $('bookingModal').addEventListener('click', e => { if (e.target === $('bookingModal')) closeModal() })
+    function openCreate(field, hour) {
+      editing = null; selectedField = field.id; selectedHour = hour
+      $('modalTitle').textContent = 'Booking baru'
+      $('selectedSlot').textContent = field.name + ' · ' + dateInput.value + ' · ' + String(hour).padStart(2,'0') + ':00'
+      $('customerName').value = ''; $('amountPaid').value = '0'; $('duration').value = '2'; $('notes').value = ''
+      $('duration').disabled = false
+      $('editStatusWrap').classList.add('hidden')
+      $('saveBooking').textContent = 'Simpan booking'
+      $('modalMessage').textContent = ''
+      $('bookingModal').classList.remove('hidden')
     }
-
-    calendar.appendChild(slot)
-  })
-}
-
-// =======================
-// FUNCTIONS
-// =======================
-
-window.closeModal = () => {
-  document.getElementById('bookingModal').classList.add('hidden')
-}
-
-window.setDuration = (d, el) => {
-  selectedDuration = d
-
-  document.querySelectorAll('.duration button')
-    .forEach(btn => btn.classList.remove('active'))
-
-  el.classList.add('active')
-}
-
-window.submitBooking = async () => {
-  try {
-    document.body.style.pointerEvents = 'none'
-
-    const amount = parseInt(
-      document.getElementById('amount_paid').value || 0
-    )
-
-    await createBooking({
-      p_field_id: selectedField,
-      p_date: today,
-      p_start: selectedHour,
-      p_duration: selectedDuration,
-      p_amount_paid: amount,
-      p_notes: document.getElementById('customer_name').value
+    function openEdit(booking, field) {
+      editing = booking
+      $('modalTitle').textContent = 'Detail booking'
+      $('selectedSlot').textContent = field.name + ' · ' + booking.booking_date + ' · ' + String(booking.start_time).slice(0,5)
+      $('customerName').value = booking.customer_name || ''
+      $('amountPaid').value = booking.amount_paid || 0
+      $('duration').value = String(booking.duration_hours)
+      $('notes').value = booking.notes || ''
+      $('duration').disabled = true
+      $('editStatusWrap').classList.remove('hidden')
+      $('bookingStatus').value = booking.status
+      $('saveBooking').textContent = 'Simpan perubahan'
+      $('modalMessage').textContent = ''
+      $('bookingModal').classList.remove('hidden')
+    }
+    function render() {
+      const root = $('calendar')
+      root.replaceChildren()
+      root.style.gridTemplateColumns = '68px repeat(' + Math.max(fields.length,1) + ', minmax(130px,1fr))'
+      const blank = document.createElement('div'); blank.className = 'time-col'; root.append(blank)
+      fields.forEach(field => { const h = document.createElement('div'); h.className='col-header'; h.textContent=field.name; root.append(h) })
+      for (let hour=8; hour<24; hour++) {
+        const time = document.createElement('div'); time.className='time-col'; time.textContent=String(hour).padStart(2,'0')+':00'; root.append(time)
+        fields.forEach(field => {
+          const booking = bookings.find(b => b.field_id===field.id && hour>=Number(String(b.start_time).slice(0,2)) && hour<Number(String(b.start_time).slice(0,2))+Number(b.duration_hours))
+          const slot = document.createElement('button')
+          slot.type='button'; slot.className='slot'
+          if (!booking) {
+            slot.classList.add('slot-free'); slot.textContent='+ Tambah'
+            slot.disabled = dateInput.value < localDate()
+            slot.addEventListener('click',()=>openCreate(field,hour))
+          } else {
+            const start = Number(String(booking.start_time).slice(0,2))
+            if (hour !== start) { slot.classList.add('slot-continuation'); slot.textContent='↳ '+booking.customer_name; slot.disabled=true }
+            else {
+              slot.classList.add('slot-booked', 'status-'+booking.status)
+              const name = document.createElement('strong'); name.textContent=booking.customer_name
+              const detail = document.createElement('small'); detail.textContent=String(booking.start_time).slice(0,5)+' · '+booking.duration_hours+' jam'
+              const payment = document.createElement('small'); payment.textContent=Number(booking.amount_paid)>0?'DP '+money(booking.amount_paid):'Belum bayar'
+              slot.append(name,detail,payment); slot.addEventListener('click',()=>openEdit(booking,field))
+            }
+          }
+          root.append(slot)
+        })
+      }
+      $('fieldSummary').replaceChildren()
+      fields.forEach(f => {
+        const item=document.createElement('div'); item.className='field-summary-item'
+        const name=document.createElement('strong'); name.textContent=f.name
+        const location=document.createElement('span'); location.textContent=f.location || 'Lokasi belum diatur'
+        const rate=document.createElement('b'); rate.textContent=money(f.hourly_rate)+'/jam'
+        item.append(name,location,rate); $('fieldSummary').append(item)
+      })
+    }
+    async function load() {
+      $('pageMessage').textContent='Memuat jadwal…'
+      try {
+        const [f,b] = await Promise.all([getFields(),getBookings(dateInput.value)])
+        fields=f; bookings=b; render()
+        $('pageMessage').textContent=fields.length?'Jadwal '+dateInput.value+' · '+bookings.length+' booking aktif':'Belum ada lapangan. Tambahkan data lapangan melalui SQL Editor Supabase.'
+      } catch (e) { $('pageMessage').textContent='Gagal memuat: '+e.message }
+    }
+    dateInput.addEventListener('change',load)
+    $('bookingForm').addEventListener('submit',async e=>{
+      e.preventDefault()
+      $('saveBooking').disabled=true; $('modalMessage').textContent='Menyimpan…'
+      try {
+        const customer_name=$('customerName').value.trim()
+        const amount_paid=Number($('amountPaid').value)
+        const notes=$('notes').value.trim() || null
+        if (!customer_name) throw new Error('Nama pelanggan wajib diisi.')
+        if (!Number.isFinite(amount_paid) || amount_paid<0) throw new Error('Nominal pembayaran tidak valid.')
+        if (editing) {
+          await updateBooking(editing.id,{customer_name,amount_paid,notes,status:$('bookingStatus').value})
+        } else {
+          await createBooking({
+            p_field_id:selectedField, p_date:dateInput.value,
+            p_start:String(selectedHour).padStart(2,'0')+':00',
+            p_duration:Number($('duration').value), p_amount_paid:amount_paid,
+            p_notes:notes, p_customer_name:customer_name
+          })
+        }
+        closeModal(); await load()
+      } catch(error) {
+        $('modalMessage').textContent=error.message || 'Tidak bisa menyimpan booking.'
+        $('modalMessage').className='form-message error'
+      } finally { $('saveBooking').disabled=false }
     })
-
-    closeModal()
-    location.reload()
-
-  } catch (e) {
-    alert(e.message)
-  } finally {
-    document.body.style.pointerEvents = 'auto'
-  }
-}
-</script>
-
+    try {
+      if (!await requireAuth()) throw new Error('Silakan login sebagai admin.')
+      const profile=await getCurrentProfile()
+      if (!profile || profile.role!=='admin') {
+        $('pageMessage').textContent='Akses ditolak. Akun ini belum memiliki role admin. Promosikan akun melalui SQL Editor Supabase, lalu login ulang.'
+        $('calendarWrap').classList.add('hidden'); return
+      }
+      $('bookingDate').parentElement.classList.remove('hidden')
+      $('bookingLegend').classList.remove('hidden')
+      $('calendarWrap').classList.remove('hidden')
+      $('adminFields').classList.remove('hidden')
+      await load()
+    } catch(error) {
+      $('pageMessage').textContent=error.message || 'Tidak dapat memverifikasi akses akun.'
+      $('calendarWrap').classList.add('hidden')
+      $('bookingLegend').classList.add('hidden')
+      $('adminFields').classList.add('hidden')
+      $('bookingDate').parentElement.classList.add('hidden')
+    }
+  </script>
 </body>
 </html>

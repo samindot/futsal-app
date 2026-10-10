@@ -1,38 +1,247 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10251d">
+  <title>FutsalKita — Booking Lapangan & Cari Lawan Sparing</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
 <body>
-  <h2>Public Calendar</h2>
-  <a href="./login.html">Login</a>
+  <nav class="nav container">
+    <a class="brand" href="./index.html"><span class="brand-mark">F</span><span>FUTSAL<span class="brand-light">KITA</span></span></a>
+    <div class="nav-links">
+      <a href="#availability">Cek lapangan</a><span id="userGreeting" class="nav-greeting hidden"></span>
+      <a href="./matchmaking.html">Cari lawan sparing</a>
+      <a id="loginLink" class="button button-small button-dark" href="./login.html">Login / Daftar</a><button id="logoutButton" class="button button-small button-outline hidden" type="button">Logout</button>
+    </div>
+  </nav>
 
-  <div id="calendar"></div>
+  <main>
+    <section class="hero container">
+      <div class="hero-copy">
+        <span class="eyebrow"><span class="pulse"></span> MAIN BARENG, LEBIH GAMPANG</span>
+        <h1>Lapangan siap.<br><span class="text-accent">Tim tinggal dicari.</span></h1>
+        <p>Temukan dan booking lapangan, lalu hubungkan tim kamu dengan tim lain untuk sparing.</p>
+        <div class="hero-actions">
+          <a class="button button-accent" href="#availability">Lihat ketersediaan <span aria-hidden="true">↗</span></a>
+          <a class="button button-outline" href="./matchmaking.html">Cari lawan sparing</a>
+        </div>
+        <div class="hero-stats"><div><strong>01</strong><span>Cek jadwal</span></div><div><strong>02</strong><span>Pilih sesi</span></div><div><strong>03</strong><span>Gas main</span></div></div>
+      </div>
+      <div class="hero-art" aria-label="Ilustrasi lapangan futsal">
+        <div class="art-tag tag-top"><span class="tag-dot"></span> YOUR NEXT GAME</div>
+        <div class="court-art"><div class="court-mid"></div><div class="court-circle"></div><div class="court-box court-box-left"></div><div class="court-box court-box-right"></div><div class="court-goal court-goal-left"></div><div class="court-goal court-goal-right"></div></div>
+        <div class="art-card"><div class="avatar-stack"><span>⚽</span><span>⚡</span><span>＋</span></div><div><strong>Temukan lawan tanding</strong><small>Mulai dari jadwal sparing</small></div><span class="art-arrow">↗</span></div>
+      </div>
+    </section>
+
+    <section class="section container" id="availability">
+      <div class="section-heading">
+        <div><span class="eyebrow">BOOKING LAPANGAN</span><h2>Cek slot yang tersedia</h2><p class="muted">Pilih tanggal untuk melihat jadwal lapangan. Slot hijau menandakan waktu tersedia.</p></div>
+        <label class="date-control"><span>Tanggal main</span><input id="bookingDate" type="date"></label>
+      </div>
+      <div id="availabilityState" class="notice">Memuat ketersediaan…</div>
+      <div id="courtList" class="court-list"></div>
+      <div class="availability-legend"><span><i class="legend-open"></i>Tersedia</span><span><i class="legend-booked"></i>Terisi</span><span class="muted">Permintaan booking menunggu konfirmasi pengelola.</span></div>
+      <section id="booking-request" class="panel request-panel">
+        <div class="panel-heading"><div><span class="eyebrow">BOOKING LAPANGAN</span><h2>Pilih slot yang kamu inginkan</h2><p class="muted">Kirim permintaan booking. Slot baru terkonfirmasi setelah pengelola menyetujui jadwal dan pembayaran.</p></div></div>
+        <form id="requestBookingForm">
+          <div class="form-grid">
+            <label class="form-field">Pilih lapangan<select id="requestField" required><option value="">Memuat lapangan…</option></select></label>
+            <label class="form-field">Jam mulai<select id="requestStart" required></select></label>
+            <label class="form-field">Durasi<select id="requestDuration"><option value="1">1 jam</option><option value="2" selected>2 jam</option><option value="3">3 jam</option><option value="4">4 jam</option><option value="5">5 jam</option><option value="6">6 jam</option><option value="7">7 jam</option><option value="8">8 jam</option></select></label>
+            <label class="form-field">Nama pemesan<input id="requestName" maxlength="100" placeholder="Nama kamu" required></label>
+            <label class="form-field form-field-full">Catatan (opsional)<input id="requestNotes" maxlength="500" placeholder="Jumlah pemain, permintaan khusus, dll."></label>
+          </div>
+          <p id="requestMessage" class="form-message" role="status"></p>
+          <button id="requestSubmit" class="button button-accent" type="submit">Kirim Permintaan Booking →</button>
+        </form>
+      </section>
+    </section>
+
+    <section class="match-strip">
+      <div class="container strip-inner"><div><span class="eyebrow">BUTUH LAWAN TANDING?</span><h2>Tim siap main, lawan belum ada?</h2><p>Pasang jadwal sparing tim kamu dan temukan tim lain yang ingin bertanding.</p></div><a class="button button-accent" href="./matchmaking.html">Cari lawan sparing <span aria-hidden="true">↗</span></a></div>
+    </section>
+
+    <section class="section container">
+      <div class="section-heading"><div><span class="eyebrow">TEAM MATCHMAKING</span><h2>Tawaran sparing mendatang</h2><p class="muted">Temukan jadwal sparing yang dipasang tim lain.</p></div><a class="text-link" href="./matchmaking.html">Lihat semua tawaran →</a></div>
+      <div id="sessionPreview" class="session-grid"><div class="notice">Memuat sesi…</div></div>
+    </section>
+  </main>
+  <footer class="footer"><div class="container footer-inner"><a class="brand" href="./index.html"><span class="brand-mark">F</span><span>FUTSAL<span class="brand-light">KITA</span></span></a><span>Temukan lapangan. Temukan lawan tanding.</span><a href="./matchmaking.html">Cari lawan sparing ↗</a></div></footer>
 
   <script type="module">
-    import { getBookings } from './js/api.js'
-
-    const today = new Date().toISOString().split('T')[0]
-    const bookings = await getBookings(today)
-
-    const container = document.getElementById('calendar')
-
-    for (let hour = 8; hour <= 22; hour++) {
-      const slot = document.createElement('div')
-      slot.innerText = `${hour}:00`
-
-      const booking = bookings.find(b =>
-        hour >= b.start_time && hour < b.end_time
-      )
-
-      if (booking) {
-        slot.style.background =
-          booking.payment_status === 'paid'
-            ? 'green'
-            : booking.payment_status === 'partial'
-            ? 'yellow'
-            : 'red'
-      }
-
-      container.appendChild(slot)
+    import { getFields, getPublicBookings, getMatchmakingSessions, requestBooking } from './js/api.js'
+    import { initAuthNav } from './js/nav-auth.js'
+    const $ = (id) => document.getElementById(id)
+    initAuthNav()
+    const localDate = (d = new Date()) => {
+      const offset = d.getTimezoneOffset() * 60000
+      return new Date(d.getTime() - offset).toISOString().slice(0, 10)
     }
+    const dateInput = $('bookingDate')
+    let dayBookings = []
+    dateInput.value = localDate()
+    dateInput.min = localDate()
+    const timeLabel = (time) => String(time).slice(0, 5)
+    const money = (value) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value || 0)
+    async function loadAvailability() {
+      $('availabilityState').textContent = 'Memuat ketersediaan…'
+      $('courtList').replaceChildren()
+      try {
+        const [fields, bookings] = await Promise.all([getFields(), getPublicBookings(dateInput.value)])
+        dayBookings = bookings
+        populateRequestForm(fields, bookings)
+        if (!fields.length) {
+          $('availabilityState').textContent = 'Belum ada lapangan yang ditambahkan. Pengelola perlu menambahkan lapangan di Supabase.'
+          return
+        }
+        $('availabilityState').textContent = 'Pilih slot yang tersedia, lalu kirim permintaan booking. Jadwal menunggu konfirmasi pengelola.'
+        for (const field of fields) {
+          const card = document.createElement('article')
+          card.className = 'court-card'
+          const heading = document.createElement('div')
+          heading.className = 'court-card-heading'
+          const info = document.createElement('div')
+          const name = document.createElement('h3')
+          name.textContent = field.name
+          const location = document.createElement('p')
+          location.textContent = field.location || 'Lokasi belum diatur'
+          info.append(name, location)
+          const price = document.createElement('strong')
+          price.className = 'court-price'
+          price.textContent = money(field.hourly_rate) + '/jam'
+          heading.append(info, price)
+          const slots = document.createElement('div')
+          slots.className = 'time-slots'
+          const fieldBookings = bookings.filter(b => b.field_id === field.id)
+          for (let hour = 8; hour < 24; hour++) {
+            const booked = fieldBookings.some(b => {
+              const start = Number(timeLabel(b.start_time).slice(0, 2))
+              return hour >= start && hour < start + Number(b.duration_hours)
+            })
+            const slot = document.createElement('div')
+            const past = dateInput.value === localDate() && hour <= new Date().getHours()
+            slot.className = 'time-slot ' + (past ? 'is-past' : booked ? 'is-booked' : 'is-open')
+            slot.textContent = String(hour).padStart(2, '0') + ':00'
+            slot.title = past ? 'Waktu sudah lewat' : booked ? 'Terisi' : 'Tersedia'
+            slots.append(slot)
+          }
+          card.append(heading, slots)
+          $('courtList').append(card)
+        }
+      } catch (error) {
+        $('availabilityState').textContent = 'Gagal memuat jadwal. Pastikan migration Supabase sudah dijalankan. Detail: ' + error.message
+      }
+    }
+    function sessionCard(session) {
+      const card = document.createElement('article')
+      card.className = 'session-card'
+      const badge = document.createElement('span')
+      badge.className = 'status-pill ' + (Number(session.joined_count) >= session.max_players ? 'status-full' : 'status-open')
+      badge.textContent = Number(session.joined_count) >= session.max_players ? 'PENUH' : 'MENCARI LAWAN'
+      const title = document.createElement('h3')
+      title.textContent = session.title
+      const venue = document.createElement('p')
+      venue.className = 'muted'
+      venue.textContent = '⌖ ' + session.venue
+      const date = document.createElement('p')
+      date.textContent = new Date(session.session_date + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' }) + ' · ' + timeLabel(session.start_time)
+      const footer = document.createElement('div')
+      footer.className = 'session-card-footer'
+      const count = document.createElement('span')
+      count.textContent = session.joined_count + '/' + session.max_players + ' pemain terdaftar'
+      const level = document.createElement('span')
+      level.textContent = session.skill_level === 'any' ? 'Semua level' : session.skill_level
+      footer.append(count, level)
+      card.append(badge, title, venue, date, footer)
+      return card
+    }
+    async function loadSessions() {
+      const root = $('sessionPreview')
+      root.replaceChildren()
+      try {
+        const sessions = (await getMatchmakingSessions()).filter(s => s.status === 'open' && Number(s.joined_count) < s.max_players).slice(0, 3)
+        if (!sessions.length) {
+          const empty = document.createElement('div')
+          empty.className = 'empty-state'
+          empty.textContent = 'Belum ada tawaran sparing. Jadilah tim pertama yang memasang jadwal.'
+          root.append(empty)
+          return
+        }
+        sessions.forEach(s => root.append(sessionCard(s)))
+      } catch (error) {
+        const message = document.createElement('div')
+        message.className = 'notice'
+        message.textContent = 'Sesi belum dapat dimuat. Pastikan migration Supabase sudah dijalankan.'
+        root.append(message)
+      }
+    }
+    function populateRequestForm(fields, bookings) {
+      const select=$('requestField'), previous=select.value
+      select.replaceChildren()
+      fields.forEach(field=>{
+        const option=document.createElement('option'); option.value=field.id; option.textContent=field.name+' · '+money(field.hourly_rate)+'/jam'; select.append(option)
+      })
+      if (previous && fields.some(field=>field.id===previous)) select.value=previous
+      updateRequestStartOptions(bookings)
+    }
+    function updateRequestStartOptions(bookings=dayBookings) {
+      const start=$('requestStart'), previous=start.value
+      start.replaceChildren()
+      const fieldId=$('requestField').value, duration=Number($('requestDuration').value)
+      let count=0
+      for(let hour=8;hour<24;hour++){
+        if(hour+duration>24) continue
+        if(dateInput.value === localDate() && hour <= new Date().getHours()) continue
+        const overlap=(bookings||[]).some(b=>{
+          if(b.field_id!==fieldId) return false
+          const bookedStart=Number(String(b.start_time).slice(0,2))
+          const bookedEnd=bookedStart+Number(b.duration_hours)
+          return hour<bookedEnd && hour+duration>bookedStart
+        })
+        if(overlap) continue
+        const option=document.createElement('option'); option.value=String(hour).padStart(2,'0')+':00'; option.textContent=option.value; start.append(option); count++
+      }
+      if(!count){
+        const option=document.createElement('option'); option.value=''; option.textContent='Tidak ada slot tersedia'; start.append(option); start.disabled=true
+      } else {
+        start.disabled=false
+        if(previous && [...start.options].some(option=>option.value===previous)) start.value=previous
+      }
+    }
+    dateInput.addEventListener('change', loadAvailability)
+    $('requestField').addEventListener('change', () => updateRequestStartOptions())
+    $('requestDuration').addEventListener('change', () => updateRequestStartOptions())
+    $('requestBookingForm').addEventListener('submit',async event=>{
+      event.preventDefault()
+      const button=$('requestSubmit'); button.disabled=true; button.textContent='Mengirim…'
+      const message=$('requestMessage'); message.className='form-message'; message.textContent=''
+      try{
+        const {data:{user},error:authError}=await supabase.auth.getUser()
+        if(authError) throw authError
+        if(!user){
+          message.textContent='Login atau daftar dulu untuk mengirim permintaan booking.'
+          message.className='form-message error'
+          const link=document.createElement('a'); link.href='./login.html?next=index.html%23booking-request'; link.className='text-link'; link.textContent='Login / daftar →'; message.append(' ',link)
+          return
+        }
+        await requestBooking({
+          p_field_id:$('requestField').value,p_date:dateInput.value,p_start:$('requestStart').value,
+          p_duration:Number($('requestDuration').value),p_customer_name:$('requestName').value.trim(),
+          p_notes:$('requestNotes').value.trim() || null
+        })
+        message.textContent='Permintaan booking terkirim. Status awal: menunggu konfirmasi pengelola.'
+        message.className='form-message success'
+        $('requestNotes').value=''
+        await loadAvailability()
+      }catch(error){
+        message.textContent=error.message || 'Gagal mengirim permintaan booking.'
+        message.className='form-message error'
+      }finally{button.disabled=false;button.textContent='Kirim Permintaan Booking →'}
+    })
+    await Promise.all([loadAvailability(), loadSessions()])
   </script>
 </body>
 </html>
