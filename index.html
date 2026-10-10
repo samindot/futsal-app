@@ -137,9 +137,10 @@
               return hour >= start && hour < start + Number(b.duration_hours)
             })
             const slot = document.createElement('div')
-            slot.className = 'time-slot ' + (booked ? 'is-booked' : 'is-open')
+            const past = dateInput.value === localDate() && hour <= new Date().getHours()
+            slot.className = 'time-slot ' + (past ? 'is-past' : booked ? 'is-booked' : 'is-open')
             slot.textContent = String(hour).padStart(2, '0') + ':00'
-            slot.title = booked ? 'Terisi' : 'Tersedia'
+            slot.title = past ? 'Waktu sudah lewat' : booked ? 'Terisi' : 'Tersedia'
             slots.append(slot)
           }
           card.append(heading, slots)
@@ -208,6 +209,7 @@
       let count=0
       for(let hour=8;hour<24;hour++){
         if(hour+duration>24) continue
+        if(dateInput.value === localDate() && hour <= new Date().getHours()) continue
         const overlap=(bookings||[]).some(b=>{
           if(b.field_id!==fieldId) return false
           const bookedStart=Number(String(b.start_time).slice(0,2))
