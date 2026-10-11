@@ -110,4 +110,19 @@ $$;
 
 grant execute on function public.get_matchmaking_sessions() to anon, authenticated;
 grant execute on function public.join_matchmaking_session(uuid) to authenticated;
+
+-- Enable realtime delivery for in-app host notifications when the publication exists.
+do $
+begin
+  if exists (select 1 from pg_publication where pubname = 'supabase_realtime')
+     and not exists (
+       select 1 from pg_publication_tables
+       where pubname = 'supabase_realtime'
+         and schemaname = 'public'
+         and tablename = 'matchmaking_notifications'
+     ) then
+    execute 'alter publication supabase_realtime add table public.matchmaking_notifications';
+  end if;
+end;
+$;
 commit;
