@@ -123,7 +123,12 @@
           actions.className = 'session-actions'
           const activeSession = activeByBooking.get(booking.id)
           const canCreate = ['pending','confirmed'].includes(booking.status) && bookingStart(booking) > localNow()
-          if (activeSession) {
+          if (bookingStart(booking) <= localNow()) {
+            const unavailable = document.createElement('span')
+            unavailable.className = 'muted'
+            unavailable.textContent = booking.status === 'no_show' ? 'Booking ditandai no show.' : booking.status === 'completed' ? 'Booking sudah selesai.' : 'Waktu main sudah dimulai atau lewat; pencarian lawan ditutup.'
+            actions.append(unavailable)
+          } else if (activeSession) {
             const active = document.createElement('a')
             active.className = 'button button-outline button-wide'
             active.href = './matchmaking.html'
