@@ -80,9 +80,7 @@ create table if not exists public.open_play_sessions (
   created_at timestamptz not null default now(),
   unique (booking_id)
 );
-create index if not exists open_play_venue_schedule_idx
-  on public.open_play_sessions(venue_id, (select null), status);
--- Separate practical index for discovery by scheduled booking.
+create index if not exists open_play_venue_status_idx on public.open_play_sessions(venue_id, status);
 create index if not exists open_play_booking_idx on public.open_play_sessions(booking_id, status);
 
 create table if not exists public.open_play_participants (
@@ -127,6 +125,45 @@ create index if not exists open_play_checkins_venue_time_idx
   on public.open_play_checkins(venue_id, checked_in_at desc);
 
 -- RLS: venue data is visible only to active members of that venue (or the player's own rows).
+-- SECURITY DEFINER helpers avoid recursive RLS when policies cross-reference membership/session tables.
+create or replace function public.is_active_venue_member(p_venue_id uuid)
+returns boolean language sql stable security definer set search_path = ''
+as $
+  select exists (
+    select 1 from public.venue_members vm
+    where vm.venue_id = p_venue_id and vm.user_id = (select auth.uid()) and vm.is_active
+  );
+$;
+
+create or replace function public.can_manage_venue_members(p_venue_id uuid)
+returns boolean language sql stable security definer set search_path = ''
+as $
+  select exists (
+    select 1 from public.venue_members vm
+    where vm.venue_id = p_venue_id and vm.user_id = (select auth.uid())
+      and vm.is_active and vm.role in ('owner','manager')
+  );
+$;
+
+create or replace function public.is_open_play_participant(p_session_id uuid)
+returns boolean language sql stable security definer set search_path = ''
+as $
+  select exists (
+    select 1 from public.open_play_participants p
+    where p.session_id = p_session_id and p.player_id = (select auth.uid())
+  );
+$;
+
+create or replace function public.is_open_play_host(p_session_id uuid)
+returns boolean language sql stable security definer set search_path = ''
+as $
+  select exists (
+    select 1 from public.open_play_sessions s
+    where s.id = p_session_id and s.host_id = (select auth.uid())
+  );
+$;
+
+
 alter table public.venues enable row level security;
 alter table public.venue_members enable row level security;
 alter table public.open_play_sessions enable row level security;
@@ -137,23 +174,12 @@ alter table public.open_play_checkins enable row level security;
 drop policy if exists "Venue members read their venues" on public.venues;
 create policy "Venue members read their venues" on public.venues
 for select to authenticated
-using (exists (
-  select 1 from public.venue_members vm
-  where vm.venue_id = venues.id and vm.user_id = (select auth.uid()) and vm.is_active
-));
+using (public.is_active_venue_member(venues.id));
 
 drop policy if exists "Users read their own venue memberships" on public.venue_members;
 create policy "Users read their own venue memberships" on public.venue_members
 for select to authenticated
-using (
-  user_id = (select auth.uid())
-  or exists (
-    select 1 from public.venue_members mine
-    where mine.venue_id = venue_members.venue_id
-      and mine.user_id = (select auth.uid())
-      and mine.is_active and mine.role in ('owner','manager')
-  )
-);
+using (user_id = (select auth.uid()) or public.can_manage_venue_members(venue_members.venue_id));
 
 drop policy if exists "Players and venue staff read open play sessions" on public.open_play_sessions;
 create policy "Players and venue staff read open play sessions" on public.open_play_sessions
@@ -161,8 +187,8 @@ for select to authenticated
 using (
   status in ('open','full')
   or host_id = (select auth.uid())
-  or exists (select 1 from public.open_play_participants p where p.session_id = open_play_sessions.id and p.player_id = (select auth.uid()))
-  or exists (select 1 from public.venue_members vm where vm.venue_id = open_play_sessions.venue_id and vm.user_id = (select auth.uid()) and vm.is_active)
+  or public.is_open_play_participant(open_play_sessions.id)
+  or public.is_active_venue_member(open_play_sessions.venue_id)
 );
 
 drop policy if exists "Players read participants in relevant sessions" on public.open_play_participants;
@@ -170,11 +196,11 @@ create policy "Players read participants in relevant sessions" on public.open_pl
 for select to authenticated
 using (
   player_id = (select auth.uid())
-  or exists (select 1 from public.open_play_sessions s where s.id = open_play_participants.session_id and s.host_id = (select auth.uid()))
+  or public.is_open_play_host(open_play_participants.session_id)
   or exists (
     select 1 from public.open_play_sessions s
-    join public.venue_members vm on vm.venue_id = s.venue_id
-    where s.id = open_play_participants.session_id and vm.user_id = (select auth.uid()) and vm.is_active
+    where s.id = open_play_participants.session_id
+      and public.is_active_venue_member(s.venue_id)
   )
 );
 
@@ -186,8 +212,7 @@ drop policy if exists "Players and venue staff read check-ins" on public.open_pl
 create policy "Players and venue staff read check-ins" on public.open_play_checkins
 for select to authenticated
 using (
-  player_id = (select auth.uid())
-  or exists (select 1 from public.venue_members vm where vm.venue_id = open_play_checkins.venue_id and vm.user_id = (select auth.uid()) and vm.is_active)
+  player_id = (select auth.uid()) or public.is_active_venue_member(open_play_checkins.venue_id)
 );
 
 grant select on public.venues, public.venue_members, public.open_play_sessions,
