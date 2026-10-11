@@ -19,6 +19,7 @@ set booking_id = (
     and (
       s.venue = f.name
       or s.venue = f.name || ' — ' || trim(coalesce(f.location, ''))
+      or s.venue = f.name || ' · ' || trim(coalesce(f.location, ''))
     )
   limit 1
 )
