@@ -7,42 +7,24 @@
 <body>
   <nav class="nav container"><a class="brand" href="./index.html"><span class="brand-mark">F</span><span>FUTSAL<span class="brand-light">KITA</span></span></a><div class="nav-links"><a href="./index.html#availability">Booking lapangan</a><span id="userGreeting" class="nav-greeting hidden"></span><a id="dashboardLink" class="hidden" href="./dashboard.html">Dashboard</a><a id="adminLink" class="hidden" href="./calendar.html">Kalender admin</a><a id="loginLink" class="button button-small button-dark" href="./login.html">Login / Daftar</a><button id="logoutButton" class="button button-small button-outline hidden">Logout</button></div></nav>
   <main class="container matchmaking-main">
-    <section class="match-hero"><div><span class="eyebrow">TEAM MATCHMAKING</span><h1>Butuh lawan sparing?<br><span class="text-accent">Temukan tim tandingmu.</span></h1><p>Publikasikan jadwal sparing tim kamu, lalu temukan tim lain yang siap bertanding di waktu dan level yang cocok.</p></div><div class="match-hero-badge"><span>⚽</span><strong>Cari lawan sparing</strong><small>Hubungkan tim. Atur pertandingan.</small></div></section>
+    <section class="match-hero"><div><span class="eyebrow">TEAM MATCHMAKING</span><h1>Butuh lawan sparing?<br><span class="text-accent">Temukan tim tandingmu.</span></h1><p>Jadwal sparing dibuat melalui booking lapangan. Temukan tim lain yang siap bertanding di waktu dan level yang cocok.</p></div><div class="match-hero-badge"><span>⚽</span><strong>Cari lawan sparing</strong><small>Hubungkan tim. Atur pertandingan.</small></div></section>
     <section class="section compact-section">
-      <div class="section-heading"><div><span class="eyebrow">TANTANGAN SPARING</span><h2>Jadwal sparing terbuka</h2><p class="muted">Pilih jadwal yang cocok untuk mempertemukan tim kamu dengan tim yang membuka tantangan.</p></div><div class="session-actions"><button id="notificationsButton" class="button button-outline hidden" type="button">Notifikasi tim <span id="notificationCount"></span></button><button id="createSessionButton" class="button button-accent">＋ Pasang jadwal sparing</button></div></div>
+      <div class="section-heading"><div><span class="eyebrow">TANTANGAN SPARING</span><h2>Jadwal sparing terbuka</h2><p class="muted">Pilih jadwal yang cocok untuk mempertemukan tim kamu dengan tim yang membuka tantangan.</p></div><div class="session-actions"><button id="notificationsButton" class="button button-outline hidden" type="button">Notifikasi tim <span id="notificationCount"></span></button></div></div>
       <div id="sessionMessage" class="notice">Memuat jadwal sparing…</div>
       <div id="sessionsList" class="session-grid session-grid-large"></div>
     </section>
     <section id="myNotifications" class="panel create-panel hidden" aria-live="polite"><div class="panel-heading"><div><span class="eyebrow">NOTIFIKASI</span><h2>Info untuk tim kamu</h2><p class="muted">Pembaruan ketika ada tim yang memilih jadwal sparing yang kamu buat.</p></div><button id="closeNotifications" class="icon-button" type="button" aria-label="Tutup notifikasi">×</button></div><div id="notificationList"></div><button id="markNotificationsRead" class="button button-outline hidden" type="button">Tandai semua dibaca</button></section>
-    <section id="createPanel" class="panel create-panel hidden">
-      <div class="panel-heading"><div><span class="eyebrow">TANTANGAN SPARING</span><h2>Pasang jadwal tim kamu</h2><p class="muted">Publikasikan waktu dan detail sparing agar tim lain bisa menemukan tawaranmu.</p></div><button id="closeCreate" class="icon-button" aria-label="Tutup">×</button></div>
-      <form id="createForm">
-        <div class="form-grid"><label class="form-field">Nama tim / judul sparing<input id="sessionTitle" required maxlength="100" placeholder="Contoh: SMA 1 mencari lawan sparing"></label><label class="form-field">Lapangan / venue<input id="sessionVenue" required maxlength="160" placeholder="Nama lapangan dan area pertandingan"></label>
-        <label class="form-field">Tanggal<input id="sessionDate" type="date" required></label><label class="form-field">Jam mulai<input id="sessionTime" type="time" min="08:00" max="23:00" required value="19:00"></label>
-        <label class="form-field">Durasi<select id="sessionDuration"><option value="1">1 jam</option><option value="2" selected>2 jam</option><option value="3">3 jam</option><option value="4">4 jam</option></select></label>
-        <label class="form-field">Level tim<select id="sessionLevel"><option value="any">Semua level</option><option value="beginner">Pemula</option><option value="intermediate">Menengah</option><option value="advanced">Mahir</option></select></label>
-        <label class="form-field">Catatan (opsional)<input id="sessionNotes" maxlength="500" placeholder="Kontak tim, warna jersey, pembagian biaya, dll."></label></div>
-        <p id="createMessage" class="form-message" role="status"></p><button id="saveSession" class="button button-accent">Publikasikan jadwal sparing →</button>
-      </form>
-    </section>
+
   </main>
   <footer class="footer"><div class="container footer-inner"><a class="brand" href="./index.html"><span class="brand-mark">F</span><span>FUTSAL<span class="brand-light">KITA</span></span></a><span>Temukan tim lawan, jadwalkan sparing.</span><a href="./index.html">Cek lapangan ↗</a></div></footer>
   <script type="module">
     import { supabase } from './js/supabase.js'
-    import { getCurrentProfile, getMatchmakingSessions, createMatchmakingSession, joinMatchmakingSession } from './js/api.js'
+    import { getCurrentProfile, getMatchmakingSessions, joinMatchmakingSession } from './js/api.js'
     import { initAuthNav } from './js/nav-auth.js'
     const $ = id => document.getElementById(id)
     initAuthNav()
-    const localDate = (d = new Date()) => new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,10)
     const timeLabel = value => String(value).slice(0,5)
     let currentUser = null, profile = null, myJoined = new Set(), sessions = []
-    $('sessionDate').min = localDate(); $('sessionDate').value = localDate()
-    $('createSessionButton').addEventListener('click', () => {
-      if (!currentUser) { window.location.href='./login.html'; return }
-      $('createPanel').classList.remove('hidden')
-      $('createPanel').scrollIntoView({behavior:'smooth',block:'start'})
-    })
-    $('closeCreate').addEventListener('click', () => $('createPanel').classList.add('hidden'))
     $('closeNotifications').addEventListener('click', () => $('myNotifications').classList.add('hidden'))
     $('notificationsButton').addEventListener('click', () => { $('myNotifications').classList.toggle('hidden'); $('myNotifications').scrollIntoView({behavior:'smooth',block:'start'}) })
     $('markNotificationsRead').addEventListener('click', async () => {
@@ -124,8 +106,8 @@
         if (!sessions.length) {
           const empty=document.createElement('div'); empty.className='empty-state'
           const h=document.createElement('h3'); h.textContent='Belum ada jadwal sparing terbuka'
-          const p=document.createElement('p'); p.textContent='Jadilah tim pertama yang memasang jadwal sparing agar tim lain bisa menemukanmu.'
-          const b=document.createElement('button'); b.className='button button-accent'; b.textContent='Pasang jadwal sparing pertama'; b.addEventListener('click',()=>{if(!currentUser){location.href='./login.html';return}$('createPanel').classList.remove('hidden');$('createPanel').scrollIntoView({behavior:'smooth'})})
+          const p=document.createElement('p'); p.textContent='Belum ada jadwal yang dibuat melalui booking lapangan. Buat booking dan aktifkan opsi cari lawan sparing untuk memasang jadwal.'
+          const b=document.createElement('a'); b.className='button button-accent'; b.href='./index.html#booking-request'; b.textContent='Booking lapangan & cari lawan →'
           empty.append(h,p,b); root.append(empty)
         } else sessions.forEach(session=>root.append(makeSessionCard(session)))
         $('sessionMessage').textContent=sessions.length+' jadwal ditemukan'
@@ -135,12 +117,7 @@
         $('sessionMessage').className='notice error'
       }
     }
-    $('createForm').addEventListener('submit',async event=>{
-      event.preventDefault()
-      if (!currentUser) {location.href='./login.html';return}
-      const button=$('saveSession'); button.disabled=true; button.textContent='Menyimpan…'
-      $('createMessage').textContent=''
-      try {
+    try {
         const date=$('sessionDate').value, time=$('sessionTime').value, duration=Number($('sessionDuration').value)
         if (date<localDate()) throw new Error('Tanggal sesi tidak boleh di masa lalu.')
         if (!time || Number(time.slice(0,2))<8 || Number(time.slice(0,2))+duration>24) throw new Error('Jam dan durasi sesi tidak valid.')
@@ -166,7 +143,6 @@
       if (currentUser) {
         try { profile = await getCurrentProfile() }
         catch (error) { console.warn('Could not load account profile', error) }
-        $('createSessionButton').textContent='＋ Pasang jadwal sparing'
       }
     } catch(error) { console.warn('Could not restore current session',error) }
     if (currentUser) {
