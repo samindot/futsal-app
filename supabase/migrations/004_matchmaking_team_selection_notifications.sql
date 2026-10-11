@@ -103,16 +103,17 @@ begin
   if not found then raise exception 'Jadwal sparing tidak ditemukan'; end if;
   if v_session.status <> 'open' then raise exception 'Jadwal ini sudah tidak terbuka'; end if;
   if v_session.host_id = (select auth.uid()) then raise exception 'Kamu tidak bisa memilih jadwal tim sendiri'; end if;
+  select status into v_existing from public.matchmaking_players
+    where session_id = p_session_id and player_id = (select auth.uid());
+  if v_existing = 'joined' then return 'already_joined'; end if;
   if exists (
     select 1 from public.matchmaking_players mp
     where mp.session_id = p_session_id and mp.status = 'joined' and mp.player_id <> v_session.host_id
   ) then raise exception 'Jadwal ini sudah dipilih tim lain'; end if;
-  select status into v_existing from public.matchmaking_players
-    where session_id = p_session_id and player_id = (select auth.uid());
-  if v_existing = 'joined' then return 'already_joined'; end if;
   insert into public.matchmaking_players(session_id, player_id, team_name, status)
   values (p_session_id, (select auth.uid()), v_team_name, 'joined')
-  on conflict (session_id, player_id) do update set status = 'joined';
+  on conflict (session_id, player_id) do update
+    set status = 'joined', team_name = excluded.team_name;
   return 'joined';
 end;
 $$;
@@ -121,7 +122,7 @@ grant execute on function public.get_matchmaking_sessions() to anon, authenticat
 grant execute on function public.join_matchmaking_session(uuid, text) to authenticated;
 
 -- Enable realtime delivery for in-app host notifications when the publication exists.
-do $
+do $realtime$
 begin
   if exists (select 1 from pg_publication where pubname = 'supabase_realtime')
      and not exists (
@@ -133,5 +134,5 @@ begin
     execute 'alter publication supabase_realtime add table public.matchmaking_notifications';
   end if;
 end;
-$;
+$realtime$;
 commit;
