@@ -77,11 +77,12 @@ create table if not exists public.open_play_sessions (
   notes text,
   status text not null default 'open'
     check (status in ('open','full','cancelled','completed')),
-  created_at timestamptz not null default now(),
-  unique (booking_id)
+  created_at timestamptz not null default now()
 );
 create index if not exists open_play_venue_status_idx on public.open_play_sessions(venue_id, status);
 create index if not exists open_play_booking_idx on public.open_play_sessions(booking_id, status);
+create unique index if not exists open_play_one_active_session_per_booking_idx
+  on public.open_play_sessions(booking_id) where status in ('open','full');
 
 create table if not exists public.open_play_participants (
   id uuid primary key default gen_random_uuid(),
@@ -427,6 +428,15 @@ begin
   return query select v_token.player_id, v_player_name, v_session.id, v_session.title, v_now;
 end;
 $$;
+
+revoke all on function public.is_active_venue_member(uuid) from public;
+revoke all on function public.can_manage_venue_members(uuid) from public;
+revoke all on function public.is_open_play_participant(uuid) from public;
+revoke all on function public.is_open_play_host(uuid) from public;
+grant execute on function public.is_active_venue_member(uuid) to authenticated;
+grant execute on function public.can_manage_venue_members(uuid) to authenticated;
+grant execute on function public.is_open_play_participant(uuid) to authenticated;
+grant execute on function public.is_open_play_host(uuid) to authenticated;
 
 revoke all on function public.create_venue(text,text) from public;
 revoke all on function public.create_open_play_session(uuid,text,integer,text,text) from public;
