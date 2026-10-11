@@ -419,3 +419,5 @@ body.modal-open { overflow: hidden; }
 }
 
 .nav-notification-link.hidden { display: none !important; }
+
+.slot-booked.status-no_show { background: #fce8e6; border-color: #e7b6b1; color: #8f2d25; }
