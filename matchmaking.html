@@ -21,7 +21,6 @@
         <label class="form-field">Tanggal<input id="sessionDate" type="date" required></label><label class="form-field">Jam mulai<input id="sessionTime" type="time" min="08:00" max="23:00" required value="19:00"></label>
         <label class="form-field">Durasi<select id="sessionDuration"><option value="1">1 jam</option><option value="2" selected>2 jam</option><option value="3">3 jam</option><option value="4">4 jam</option></select></label>
         <label class="form-field">Level tim<select id="sessionLevel"><option value="any">Semua level</option><option value="beginner">Pemula</option><option value="intermediate">Menengah</option><option value="advanced">Mahir</option></select></label>
-        <input id="sessionPlayers" type="hidden" value="2">
         <label class="form-field">Catatan (opsional)<input id="sessionNotes" maxlength="500" placeholder="Kontak tim, warna jersey, pembagian biaya, dll."></label></div>
         <p id="createMessage" class="form-message" role="status"></p><button id="saveSession" class="button button-accent">Publikasikan jadwal sparing →</button>
       </form>
@@ -30,7 +29,7 @@
   <footer class="footer"><div class="container footer-inner"><a class="brand" href="./index.html"><span class="brand-mark">F</span><span>FUTSAL<span class="brand-light">KITA</span></span></a><span>Temukan tim lawan, jadwalkan sparing.</span><a href="./index.html">Cek lapangan ↗</a></div></footer>
   <script type="module">
     import { supabase } from './js/supabase.js'
-    import { getCurrentProfile, getMatchmakingSessions, createMatchmakingSession, joinMatchmakingSession, leaveMatchmakingSession } from './js/api.js'
+    import { getCurrentProfile, getMatchmakingSessions, createMatchmakingSession, joinMatchmakingSession } from './js/api.js'
     import { initAuthNav } from './js/nav-auth.js'
     const $ = id => document.getElementById(id)
     initAuthNav()
@@ -151,7 +150,7 @@
           skill_level:$('sessionLevel').value, max_players:2,
           notes:$('sessionNotes').value.trim() || null
         })
-        $('createForm').reset(); $('sessionDate').value=localDate(); $('sessionTime').value='19:00'; $('sessionDuration').value='2'; $('sessionPlayers').value='10'
+        $('createForm').reset(); $('sessionDate').value=localDate(); $('sessionTime').value='19:00'; $('sessionDuration').value='2'
         $('createPanel').classList.add('hidden'); await loadSessions()
       } catch(error) {
         $('createMessage').textContent=error.message || 'Gagal mempublikasikan jadwal sparing.'
@@ -168,6 +167,18 @@
         $('createSessionButton').textContent='＋ Pasang jadwal sparing'
       }
     } catch(error) { console.warn('Could not restore current session',error) }
+    if (currentUser) {
+      supabase.channel('matchmaking-notifications-' + currentUser.id)
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'matchmaking_notifications',
+          filter: 'recipient_id=eq.' + currentUser.id
+        }, async () => {
+          await Promise.all([loadNotifications(), loadSessions()])
+        })
+        .subscribe()
+    }
     await loadSessions()
   </script>
 </body>
