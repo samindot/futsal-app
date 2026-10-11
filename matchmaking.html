@@ -57,7 +57,7 @@
       const badge=document.createElement('span'); badge.className='status-pill '+(session.opponent_joined?'status-full':'status-open'); badge.textContent=session.opponent_joined?'SUDAH ADA LAWAN':'MENCARI LAWAN'
       const level=document.createElement('span'); level.className='level-tag'; level.textContent=({any:'Semua level',beginner:'Pemula',intermediate:'Menengah',advanced:'Mahir'})[session.skill_level] || session.skill_level
       top.append(badge,level)
-      const title=document.createElement('h3'); title.textContent=session.title
+      const title=document.createElement('h3'); title.textContent=session.opponent_joined && session.opponent_team_name ? session.title+' vs '+session.opponent_team_name : session.title
       const venue=document.createElement('p'); venue.className='session-venue'; venue.textContent='⌖ '+session.venue
       const date=document.createElement('div'); date.className='session-date'
       const dateStrong=document.createElement('strong'); dateStrong.textContent=new Date(session.session_date+'T00:00:00').toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long'})
@@ -72,12 +72,14 @@
       button.disabled=isHost || joined || session.opponent_joined || session.status!=='open'
       button.addEventListener('click',async()=>{
         if (!currentUser) { window.location.href='./login.html'; return }
+        const teamName=window.prompt('Masukkan nama tim kamu untuk ditampilkan sebagai lawan sparing:')
+        if(!teamName || !teamName.trim()) return
         const dateText=new Date(session.session_date+'T00:00:00').toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'})
-        const confirmed=window.confirm('Yakin memilih jadwal sparing ini?\\n\\nTim: '+session.title+'\\nLapangan: '+session.venue+'\\nJadwal: '+dateText+' pukul '+timeLabel(session.start_time)+' ('+session.duration_hours+' jam)\\n\\nJika dikonfirmasi, jadwal ini akan dipilih sebagai lawan sparing tim kamu. Pembuat jadwal akan mendapat notifikasi.')
+        const confirmed=window.confirm('Yakin memilih jadwal sparing ini?\n\nTim A: '+session.title+'\nTim B: '+teamName.trim()+'\nLapangan: '+session.venue+'\nJadwal: '+dateText+' pukul '+timeLabel(session.start_time)+' ('+session.duration_hours+' jam)\n\nJika dikonfirmasi, jadwal menjadi pilihan sparing kedua tim dan pembuat jadwal akan mendapat notifikasi.')
         if(!confirmed) return
         button.disabled=true; button.textContent='Memproses…'
         try {
-          await joinMatchmakingSession(session.id)
+          await joinMatchmakingSession(session.id, teamName.trim())
           await loadSessions()
         } catch(error) { $('sessionMessage').textContent=error.message; $('sessionMessage').className='notice error'; button.disabled=false; button.textContent='Pilih tim ini →' }
       })
