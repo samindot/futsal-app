@@ -417,3 +417,5 @@ body.modal-open { overflow: hidden; }
   .nav-links .nav-notification-link { display: inline-flex !important; gap: 4px; font-size: .8rem; }
   .nav-notification-label { display: none; }
 }
+
+.nav-notification-link.hidden { display: none !important; }
