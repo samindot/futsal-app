@@ -124,3 +124,7 @@ export async function createMatchmakingForBooking(bookingId, title, skillLevel =
 export async function cancelMatchmakingSession(sessionId) {
   return unwrap(supabase.rpc('cancel_matchmaking_session', { p_session_id: sessionId }))
 }
+
+export async function refreshBookingStatuses() {
+  return unwrap(supabase.rpc('refresh_booking_statuses'))
+}
