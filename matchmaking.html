@@ -149,6 +149,10 @@
         .subscribe()
     }
     await loadSessions()
+    if (window.location.hash === '#myNotifications') {
+      $('myNotifications').classList.remove('hidden')
+      $('myNotifications').scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
   </script>
 </body>
 </html>
