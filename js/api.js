@@ -86,3 +86,41 @@ export async function getMyParticipations() {
       .select('session_id,status').eq('player_id', user.id).eq('status', 'joined')
   )
 }
+
+export async function getMyBookings() {
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  if (userError) throw userError
+  if (!user) return []
+  return unwrap(
+    supabase.from('bookings')
+      .select('id,field_id,booking_date,start_time,duration_hours,customer_name,amount_paid,status,created_at,fields(name,location)')
+      .eq('created_by', user.id)
+      .order('booking_date', { ascending: false })
+      .order('start_time', { ascending: false })
+  )
+}
+
+export async function getMyBookingMatchmaking() {
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  if (userError) throw userError
+  if (!user) return []
+  return unwrap(
+    supabase.from('matchmaking_sessions')
+      .select('id,booking_id,status,title')
+      .eq('host_id', user.id)
+      .not('booking_id', 'is', null)
+  )
+}
+
+export async function createMatchmakingForBooking(bookingId, title, skillLevel = 'any', notes = '') {
+  return unwrap(supabase.rpc('create_matchmaking_for_booking', {
+    p_booking_id: bookingId,
+    p_title: title,
+    p_skill_level: skillLevel,
+    p_notes: notes || null
+  }))
+}
+
+export async function cancelMatchmakingSession(sessionId) {
+  return unwrap(supabase.rpc('cancel_matchmaking_session', { p_session_id: sessionId }))
+}
