@@ -73,21 +73,20 @@
   <footer class="footer"><div class="container footer-inner"><a class="brand" href="./dashboard.html"><span class="brand-mark">F</span><span>FUTSAL<span class="brand-light">KITA</span></span></a><span>Pilih aktivitas dan mulai atur pertandinganmu.</span><a href="./index.html">Beranda ↗</a></div></footer>
   <script type="module">
     import { supabase } from './js/supabase.js'
-    import { getCurrentProfile, getMyBookings, getMyBookingMatchmaking, createMatchmakingForBooking } from './js/api.js'
+    import { getCurrentProfile, getMyBookings, getMyBookingMatchmaking, createMatchmakingForBooking, refreshBookingStatuses } from './js/api.js'
     import { initAuthNav } from './js/nav-auth.js'
     initAuthNav()
     const $ = id => document.getElementById(id)
     const timeLabel = value => String(value).slice(0, 5)
     const money = value => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value || 0)
-    const localToday = () => {
-      const d = new Date()
-      return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10)
-    }
+    const bookingStart = booking => new Date(booking.booking_date + 'T' + timeLabel(booking.start_time) + ':00+07:00')
+    const localNow = () => new Date()
     async function loadBookingHistory() {
       const message = $('bookingHistoryMessage')
       const root = $('bookingHistoryList')
       root.replaceChildren()
       try {
+        await refreshBookingStatuses()
         const [bookings, linkedSessions] = await Promise.all([getMyBookings(), getMyBookingMatchmaking()])
         const activeByBooking = new Map()
         for (const session of linkedSessions) {
@@ -110,7 +109,7 @@
           top.className = 'session-top'
           const badge = document.createElement('span')
           badge.className = 'status-pill ' + (booking.status === 'confirmed' ? 'status-open' : booking.status === 'cancelled' ? 'status-full' : 'status-open')
-          badge.textContent = ({pending:'MENUNGGU KONFIRMASI',confirmed:'TERKONFIRMASI',cancelled:'DIBATALKAN',completed:'SELESAI'})[booking.status] || booking.status.toUpperCase()
+          badge.textContent = ({pending:'MENUNGGU KONFIRMASI',confirmed:'TERKONFIRMASI',cancelled:'DIBATALKAN',completed:'SELESAI',no_show:'NO SHOW'})[booking.status] || booking.status.toUpperCase()
           top.append(badge)
           const title = document.createElement('h3')
           title.textContent = (booking.fields?.name || 'Lapangan') + ' · ' + new Date(booking.booking_date + 'T00:00:00').toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'})
@@ -123,7 +122,7 @@
           const actions = document.createElement('div')
           actions.className = 'session-actions'
           const activeSession = activeByBooking.get(booking.id)
-          const canCreate = ['pending','confirmed'].includes(booking.status) && booking.booking_date >= localToday()
+          const canCreate = ['pending','confirmed'].includes(booking.status) && bookingStart(booking) > localNow()
           if (activeSession) {
             const active = document.createElement('a')
             active.className = 'button button-outline button-wide'
@@ -165,7 +164,7 @@
           } else {
             const unavailable = document.createElement('span')
             unavailable.className = 'muted'
-            unavailable.textContent = 'Pencarian lawan tidak tersedia untuk booking ini.'
+            unavailable.textContent = bookingStart(booking) <= localNow() ? 'Waktu main sudah dimulai atau lewat; pencarian lawan ditutup.' : booking.status === 'no_show' ? 'Booking ditandai no show.' : booking.status === 'completed' ? 'Booking sudah selesai.' : booking.status === 'cancelled' ? 'Booking dibatalkan.' : 'Pencarian lawan tidak tersedia untuk booking ini.'
             actions.append(unavailable)
           }
           card.append(top, title, detail, customer, actions)
