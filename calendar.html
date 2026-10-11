@@ -39,7 +39,7 @@
   <script type="module">
     import { requireAuth } from './js/auth.js'
     import { initAuthNav } from './js/nav-auth.js'
-    import { getCurrentProfile, getFields, getBookings, createBooking, updateBooking, updateFieldHourlyRate } from './js/api.js'
+    import { getCurrentProfile, getFields, getBookings, createBooking, updateBooking, updateFieldHourlyRate, refreshBookingStatuses } from './js/api.js'
     const $ = id => document.getElementById(id)
     const localDate = (d = new Date()) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0,10)
     const money = n => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(n || 0)
