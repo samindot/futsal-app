@@ -69,8 +69,8 @@ export async function createMatchmakingSession(payload) {
   }).select().single())
 }
 
-export async function joinMatchmakingSession(sessionId) {
-  return unwrap(supabase.rpc('join_matchmaking_session', { p_session_id: sessionId }))
+export async function joinMatchmakingSession(sessionId, teamName) {
+  return unwrap(supabase.rpc('join_matchmaking_session', { p_session_id: sessionId, p_team_name: teamName }))
 }
 
 export async function leaveMatchmakingSession(sessionId) {
