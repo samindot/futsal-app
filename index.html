@@ -67,9 +67,10 @@
             <label class="form-field">Jam mulai<select id="requestStart" required></select></label>
             <label class="form-field">Durasi<select id="requestDuration"><option value="1">1 jam</option><option value="2" selected>2 jam</option><option value="3">3 jam</option><option value="4">4 jam</option><option value="5">5 jam</option><option value="6">6 jam</option><option value="7">7 jam</option><option value="8">8 jam</option></select></label>
             <label class="form-field">Nama pemesan<input id="requestName" maxlength="100" placeholder="Nama kamu" required></label>
+            <label class="form-field">Nama tim / judul sparing<input id="requestTeamTitle" maxlength="100" placeholder="Contoh: FC Siliwangi mencari lawan" ></label>
             <label class="form-field">No. WhatsApp<input id="requestWhatsApp" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="Contoh: 081234567890" required></label>
             <label class="form-field form-field-full">Catatan (opsional)<input id="requestNotes" maxlength="500" placeholder="Jumlah pemain, permintaan khusus, dll."></label>
-            <label class="sparing-toggle form-field-full"><input id="publishSparing" type="checkbox"><span><strong>Sekalian cari lawan sparing</strong><small>Jadwal, lapangan, tanggal, jam, dan durasi akan diambil otomatis dari booking ini. Nama pemesan menjadi judul sesi; level default semua level dan kapasitas 10 pemain.</small></span></label>
+            <label class="sparing-toggle form-field-full"><input id="publishSparing" type="checkbox"><span><strong>Sekalian cari lawan sparing</strong><small>Nama tim / judul di atas akan digunakan untuk sesi sparing. Jadwal, lapangan, tanggal, jam, dan durasi diambil dari booking ini.</small></span></label>
           </div>
           <p class="booking-terms-consent">Dengan mengeklik <strong>“Kirim Permintaan Booking”</strong>, Anda menyatakan telah membaca dan menyetujui <a href="./terms.html" target="_blank" rel="noopener">Syarat &amp; Ketentuan (TnC) FutsalKita</a>, termasuk ketentuan kehadiran dan no-show.</p>
           <p id="requestMessage" class="form-message" role="status"></p>
@@ -268,6 +269,7 @@
     })
 
     dateInput.addEventListener('change', loadAvailability)
+    $('publishSparing').addEventListener('change', () => { $('requestTeamTitle').required = $('publishSparing').checked })
     $('requestField').addEventListener('change', () => updateRequestStartOptions())
     $('requestDuration').addEventListener('change', () => updateRequestStartOptions())
     $('requestBookingForm').addEventListener('submit',async event=>{
@@ -285,7 +287,9 @@
         const bookingTime = $('requestStart').value
         const bookingDuration = Number($('requestDuration').value)
         const customerName = $('requestName').value.trim()
+        const teamTitle = $('requestTeamTitle').value.trim()
         const field = activeFields.find(item => item.id === $('requestField').value)
+        if ($('publishSparing').checked && !teamTitle) throw new Error('Isi Nama tim / judul sparing untuk membuat jadwal cari lawan.')
         await requestBooking({
           p_field_id:$('requestField').value,p_date:bookingDate,p_start:bookingTime,
           p_duration:bookingDuration,p_customer_name:customerName,
@@ -297,7 +301,7 @@
           try {
             if (!field) throw new Error('Data lapangan tidak ditemukan. Muat ulang halaman lalu coba lagi.')
             await createMatchmakingSession({
-              title: (customerName + ' mencari lawan sparing').slice(0, 100),
+              title: teamTitle.slice(0, 100),
               venue: (field.name + (field.location ? ' · ' + field.location : '')).slice(0, 160),
               session_date: bookingDate,
               start_time: bookingTime,
@@ -319,11 +323,11 @@
         if (sparingPublished) {
           successNote.textContent = 'Booking terkirim dan jadwal sparing juga sudah dipublikasikan. Pengelola tetap perlu mengonfirmasi booking lapangan.'
         } else if ($('publishSparing').checked && sparingError) {
-          successNote.textContent = 'Booking berhasil dikirim, tetapi jadwal sparing belum terbit (' + (sparingError.message || 'terjadi kesalahan') + '). Kamu bisa memasang jadwalnya dari menu Team Matchmaking.'
+          successNote.textContent = 'Booking berhasil dikirim, tetapi jadwal sparing belum terbit (' + (sparingError.message || 'terjadi kesalahan') + '). Silakan coba lagi melalui form booking dengan opsi cari lawan sparing.'
         } else {
           successNote.textContent = 'Pengelola akan memeriksa jadwal dan pembayaran sebelum booking dikonfirmasi.'
         }
-        $('requestNotes').value=''
+        $('requestNotes').value=''; $('requestTeamTitle').value=''; $('publishSparing').checked=false; $('requestTeamTitle').required=false
         showBookingSuccessModal()
         await Promise.all([loadAvailability(), sparingPublished ? loadSessions() : Promise.resolve()])
       }catch(error){
