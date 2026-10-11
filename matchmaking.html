@@ -114,8 +114,8 @@
         if (!sessions.length) {
           const empty=document.createElement('div'); empty.className='empty-state'
           const h=document.createElement('h3'); h.textContent='Belum ada jadwal sparing terbuka'
-          const p=document.createElement('p'); p.textContent='Belum ada jadwal yang dibuat melalui booking lapangan. Buat booking dan aktifkan opsi cari lawan sparing untuk memasang jadwal.'
-          const b=document.createElement('a'); b.className='button button-accent'; b.href='./index.html#booking-request'; b.textContent='Booking lapangan & cari lawan →'
+          const p=document.createElement('p'); p.textContent='Jadwal sparing dibuat dari booking lapangan. Kamu bisa mengaktifkan cari lawan saat booking atau membuatnya kapan saja dari riwayat booking di Dashboard.'
+          const b=document.createElement('a'); b.className='button button-accent'; b.href=currentUser?'./dashboard.html':'./index.html#booking-request'; b.textContent=currentUser?'Buka riwayat booking →':'Booking lapangan →'
           empty.append(h,p,b); root.append(empty)
         } else sessions.forEach(session=>root.append(makeSessionCard(session)))
         $('sessionMessage').textContent=sessions.length+' jadwal ditemukan'
