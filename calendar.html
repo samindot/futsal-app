@@ -193,6 +193,7 @@
       if (!profile || profile.role!=='admin') {
         throw new Error('Akses ditolak. Akun ini belum memiliki role admin. Pastikan role di tabel public.profiles sudah admin, lalu login ulang.')
       }
+      await refreshBookingStatuses()
       $('bookingDate').parentElement.classList.remove('hidden')
       $('bookingLegend').classList.remove('hidden')
       $('calendarWrap').classList.remove('hidden')
