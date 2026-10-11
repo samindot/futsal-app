@@ -121,7 +121,9 @@ export function initAuthNav() {
     render(session)
   })
   window.addEventListener('focus', () => {
-    const user = supabase.auth.getSession().then(({data}) => refreshNotificationCount(data?.session?.user || null)).catch(error => console.warn('Could not refresh notification count', error))
+    supabase.auth.getSession()
+      .then(({data}) => refreshNotificationCount(data?.session?.user || null))
+      .catch(error => console.warn('Could not refresh notification count', error))
   })
   window.addEventListener('pagehide', () => subscription.unsubscribe(), { once: true })
 }
