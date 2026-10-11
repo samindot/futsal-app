@@ -19,7 +19,7 @@
   <footer class="footer"><div class="container footer-inner"><a class="brand" href="./index.html"><span class="brand-mark">F</span><span>FUTSAL<span class="brand-light">KITA</span></span></a><span>Temukan tim lawan, jadwalkan sparing.</span><a href="./index.html">Cek lapangan ↗</a></div></footer>
   <script type="module">
     import { supabase } from './js/supabase.js'
-    import { getCurrentProfile, getMatchmakingSessions, joinMatchmakingSession } from './js/api.js'
+    import { getCurrentProfile, getMatchmakingSessions, joinMatchmakingSession, cancelMatchmakingSession } from './js/api.js'
     import { initAuthNav } from './js/nav-auth.js'
     const $ = id => document.getElementById(id)
     initAuthNav()
@@ -67,13 +67,21 @@
       })
       actions.append(button)
       if (isHost) {
-        const cancel=document.createElement('button'); cancel.type='button'; cancel.className='button button-outline button-wide'; cancel.textContent='Batalkan jadwal'
+        const cancel=document.createElement('button'); cancel.type='button'; cancel.className='button button-outline button-wide'; cancel.textContent='Batalkan pencarian'
         cancel.addEventListener('click',async()=>{
-          if (!confirm('Batalkan jadwal sparing ini? Tim lain tidak lagi melihat tawaran ini.')) return
-          cancel.disabled=true; cancel.textContent='Membatalkan jadwal…'
-          const {error}=await supabase.from('matchmaking_sessions').update({status:'cancelled'}).eq('id',session.id)
-          if (error) { $('sessionMessage').textContent=error.message; $('sessionMessage').className='notice error'; cancel.disabled=false; cancel.textContent='Batalkan jadwal'; return }
-          await loadSessions()
+          if (!confirm('Batalkan pencarian lawan untuk jadwal ini? Booking lapangan tetap ada dan kamu bisa membuat pencarian baru dari Dashboard > Riwayat Booking. Jika sudah ada tim lawan, mereka akan diberi notifikasi pembatalan.')) return
+          cancel.disabled=true; cancel.textContent='Membatalkan pencarian…'
+          try {
+            await cancelMatchmakingSession(session.id)
+            $('sessionMessage').textContent='Pencarian lawan dibatalkan. Booking lapangan tetap tersimpan; kamu bisa mencari lawan lagi dari riwayat booking di Dashboard.'
+            $('sessionMessage').className='notice'
+            await loadSessions()
+          } catch (error) {
+            $('sessionMessage').textContent=error.message
+            $('sessionMessage').className='notice error'
+            cancel.disabled=false
+            cancel.textContent='Batalkan pencarian'
+          }
         })
         actions.append(cancel)
       }
