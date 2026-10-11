@@ -385,3 +385,35 @@ body.modal-open { overflow: hidden; }
 .match-notification p { margin: 0 0 6px; color: var(--ink-soft); line-height: 1.6; }
 .match-notification small { color: var(--muted); }
 .match-notification.is-unread { border-color: #b8d2a8; background: #f6faf2; }
+
+
+/* Shared navbar matchmaking notification bell */
+.nav-notification-link {
+  position: relative;
+  display: inline-flex !important;
+  align-items: center;
+  gap: 7px;
+  color: var(--ink);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.nav-notification-link > span:first-child { font-size: 1.15rem; line-height: 1; }
+.nav-notification-label { font-size: .82rem; }
+.nav-notification-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #b2451b;
+  color: #fff;
+  font-size: .68rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.nav-notification-badge.hidden { display: none !important; }
+@media (max-width: 700px) {
+  .nav-links .nav-notification-link { display: inline-flex !important; gap: 4px; font-size: .8rem; }
+  .nav-notification-label { display: none; }
+}
