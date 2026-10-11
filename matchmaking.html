@@ -93,10 +93,18 @@
       const button=$('notificationsButton')
       if(!currentUser){button.classList.add('hidden');return}
       button.classList.remove('hidden')
-      const {data,error}=await supabase.from('matchmaking_notifications').select('id,session_id,message,created_at,read_at').eq('recipient_id',currentUser.id).order('created_at',{ascending:false}).limit(20)
-      if(error){console.warn('Could not load matchmaking notifications',error);button.classList.add('hidden');return}
+      const [notificationsResult, unreadResult] = await Promise.all([
+        supabase.from('matchmaking_notifications').select('id,session_id,message,created_at,read_at').eq('recipient_id',currentUser.id).order('created_at',{ascending:false}).limit(20),
+        supabase.from('matchmaking_notifications').select('id',{count:'exact',head:true}).eq('recipient_id',currentUser.id).is('read_at',null)
+      ])
+      if(notificationsResult.error || unreadResult.error){
+        console.warn('Could not load matchmaking notifications',notificationsResult.error || unreadResult.error)
+        button.classList.add('hidden')
+        return
+      }
+      const data=notificationsResult.data || []
       const list=$('notificationList');list.replaceChildren()
-      const unread=(data||[]).filter(item=>!item.read_at).length
+      const unread=unreadResult.count || 0
       $('notificationCount').textContent=unread?`(${unread})`:''
       window.dispatchEvent(new CustomEvent('futsalkita-notifications-updated',{detail:{unread}}))
       $('markNotificationsRead').classList.toggle('hidden',unread===0)
