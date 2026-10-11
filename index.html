@@ -71,6 +71,7 @@
             <label class="form-field form-field-full">Catatan (opsional)<input id="requestNotes" maxlength="500" placeholder="Jumlah pemain, permintaan khusus, dll."></label>
             <label class="sparing-toggle form-field-full"><input id="publishSparing" type="checkbox"><span><strong>Sekalian cari lawan sparing</strong><small>Jadwal, lapangan, tanggal, jam, dan durasi akan diambil otomatis dari booking ini. Nama pemesan menjadi judul sesi; level default semua level dan kapasitas 10 pemain.</small></span></label>
           </div>
+          <p class="booking-terms-consent">Dengan mengeklik <strong>“Kirim Permintaan Booking”</strong>, Anda menyatakan telah membaca dan menyetujui <a href="./terms.html" target="_blank" rel="noopener">Syarat &amp; Ketentuan (TnC) FutsalKita</a>, termasuk ketentuan kehadiran dan no-show.</p>
           <p id="requestMessage" class="form-message" role="status"></p>
           <button id="requestSubmit" class="button button-accent" type="submit">Kirim Permintaan Booking →</button>
         </form>
@@ -86,7 +87,7 @@
       <div id="sessionPreview" class="session-grid"><div class="notice">Memuat sesi…</div></div>
     </section>
   </main>
-  <footer class="footer"><div class="container footer-inner"><a class="brand" href="./index.html"><span class="brand-mark">F</span><span>FUTSAL<span class="brand-light">KITA</span></span></a><span>Temukan lapangan. Temukan lawan tanding.</span><a href="./matchmaking.html">Cari lawan sparing ↗</a></div></footer>
+  <footer class="footer"><div class="container footer-inner"><a class="brand" href="./index.html"><span class="brand-mark">F</span><span>FUTSAL<span class="brand-light">KITA</span></span></a><span>Temukan lapangan. Temukan lawan tanding.</span><a href="./terms.html">Syarat &amp; Ketentuan</a><a href="./matchmaking.html">Cari lawan sparing ↗</a></div></footer>
 
   <script type="module">
     import { getFields, getPublicBookings, getMatchmakingSessions, requestBooking, createMatchmakingSession } from './js/api.js'
