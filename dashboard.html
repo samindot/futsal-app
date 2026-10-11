@@ -68,9 +68,109 @@
   <footer class="footer"><div class="container footer-inner"><a class="brand" href="./dashboard.html"><span class="brand-mark">F</span><span>FUTSAL<span class="brand-light">KITA</span></span></a><span>Pilih aktivitas dan mulai atur pertandinganmu.</span><a href="./index.html">Beranda ↗</a></div></footer>
   <script type="module">
     import { supabase } from './js/supabase.js'
-    import { getCurrentProfile } from './js/api.js'
+    import { getCurrentProfile, getMyBookings, getMyBookingMatchmaking, createMatchmakingForBooking } from './js/api.js'
     import { initAuthNav } from './js/nav-auth.js'
     initAuthNav()
+    const $ = id => document.getElementById(id)
+    const timeLabel = value => String(value).slice(0, 5)
+    const money = value => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value || 0)
+    const localToday = () => {
+      const d = new Date()
+      return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10)
+    }
+    async function loadBookingHistory() {
+      const message = $('bookingHistoryMessage')
+      const root = $('bookingHistoryList')
+      root.replaceChildren()
+      try {
+        const [bookings, linkedSessions] = await Promise.all([getMyBookings(), getMyBookingMatchmaking()])
+        const activeByBooking = new Map()
+        for (const session of linkedSessions) {
+          if (session.status === 'open' || session.status === 'full') activeByBooking.set(session.booking_id, session)
+        }
+        if (!bookings.length) {
+          message.textContent = 'Belum ada riwayat booking dari akun ini.'
+          const link = document.createElement('a')
+          link.className = 'button button-accent'
+          link.href = './index.html#availability'
+          link.textContent = 'Booking lapangan →'
+          root.append(link)
+          return
+        }
+        message.textContent = bookings.length + ' booking ditemukan'
+        for (const booking of bookings) {
+          const card = document.createElement('article')
+          card.className = 'session-card session-card-full booking-history-card'
+          const top = document.createElement('div')
+          top.className = 'session-top'
+          const badge = document.createElement('span')
+          badge.className = 'status-pill ' + (booking.status === 'confirmed' ? 'status-open' : booking.status === 'cancelled' ? 'status-full' : 'status-open')
+          badge.textContent = ({pending:'MENUNGGU KONFIRMASI',confirmed:'TERKONFIRMASI',cancelled:'DIBATALKAN',completed:'SELESAI'})[booking.status] || booking.status.toUpperCase()
+          top.append(badge)
+          const title = document.createElement('h3')
+          title.textContent = (booking.fields?.name || 'Lapangan') + ' · ' + new Date(booking.booking_date + 'T00:00:00').toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'})
+          const detail = document.createElement('p')
+          detail.className = 'session-venue'
+          detail.textContent = timeLabel(booking.start_time) + ' · ' + booking.duration_hours + ' jam · ' + (booking.fields?.location || 'Lokasi belum diatur')
+          const customer = document.createElement('p')
+          customer.className = 'session-notes'
+          customer.textContent = 'Pemesan: ' + booking.customer_name + ' · Dibayar: ' + money(booking.amount_paid)
+          const actions = document.createElement('div')
+          actions.className = 'session-actions'
+          const activeSession = activeByBooking.get(booking.id)
+          const canCreate = ['pending','confirmed'].includes(booking.status) && booking.booking_date >= localToday()
+          if (activeSession) {
+            const active = document.createElement('a')
+            active.className = 'button button-outline button-wide'
+            active.href = './matchmaking.html'
+            active.textContent = 'Pencarian lawan aktif · Lihat →'
+            actions.append(active)
+          } else if (canCreate) {
+            const create = document.createElement('button')
+            create.type = 'button'
+            create.className = 'button button-accent button-wide'
+            create.textContent = 'Cari lawan sparing →'
+            create.addEventListener('click', async () => {
+              const defaultTitle = booking.customer_name ? 'Tim ' + booking.customer_name + ' mencari lawan' : 'Mencari lawan sparing'
+              const teamTitle = window.prompt('Nama tim / judul sparing:', defaultTitle)
+              if (!teamTitle || !teamTitle.trim()) return
+              const skill = window.prompt('Level sparing: any, beginner, intermediate, atau advanced', 'any')
+              if (skill === null) return
+              const normalizedSkill = skill.trim().toLowerCase()
+              if (!['any','beginner','intermediate','advanced'].includes(normalizedSkill)) {
+                message.textContent = 'Level tidak valid. Gunakan any, beginner, intermediate, atau advanced.'
+                message.className = 'notice error'
+                return
+              }
+              create.disabled = true
+              create.textContent = 'Membuat pencarian…'
+              try {
+                await createMatchmakingForBooking(booking.id, teamTitle.trim(), normalizedSkill)
+                message.textContent = 'Pencarian lawan berhasil dibuat dari booking ini.'
+                message.className = 'notice'
+                await loadBookingHistory()
+              } catch (error) {
+                message.textContent = error.message || 'Gagal membuat pencarian lawan.'
+                message.className = 'notice error'
+                create.disabled = false
+                create.textContent = 'Cari lawan sparing →'
+              }
+            })
+            actions.append(create)
+          } else {
+            const unavailable = document.createElement('span')
+            unavailable.className = 'muted'
+            unavailable.textContent = 'Pencarian lawan tidak tersedia untuk booking ini.'
+            actions.append(unavailable)
+          }
+          card.append(top, title, detail, customer, actions)
+          root.append(card)
+        }
+      } catch (error) {
+        message.textContent = 'Gagal memuat riwayat booking: ' + error.message
+        message.className = 'notice error'
+      }
+    }
     const { data, error } = await supabase.auth.getSession()
     if (error || !data?.session) {
       window.location.replace('./login.html?next=dashboard.html')
@@ -87,6 +187,7 @@
         document.querySelector('.footer-inner > a:last-child').textContent = 'Kalender booking ↗'
       } else {
         document.getElementById('welcomeTitle').textContent = 'Book? Atau cari lawan, ' + name + '?'
+        await loadBookingHistory()
       }
     }
   </script>
