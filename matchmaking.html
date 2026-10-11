@@ -7,13 +7,14 @@
 <body>
   <nav class="nav container"><a class="brand" href="./index.html"><span class="brand-mark">F</span><span>FUTSAL<span class="brand-light">KITA</span></span></a><div class="nav-links"><a href="./index.html#availability">Booking lapangan</a><span id="userGreeting" class="nav-greeting hidden"></span><a id="dashboardLink" class="hidden" href="./dashboard.html">Dashboard</a><a id="adminLink" class="hidden" href="./calendar.html">Kalender admin</a><a id="loginLink" class="button button-small button-dark" href="./login.html">Login / Daftar</a><button id="logoutButton" class="button button-small button-outline hidden">Logout</button></div></nav>
   <main class="container matchmaking-main">
+    <section id="myNotifications" class="panel create-panel hidden" aria-live="polite"><div class="panel-heading"><div><span class="eyebrow">NOTIFIKASI</span><h2>Info untuk tim kamu</h2><p class="muted">Pembaruan ketika ada tim yang memilih jadwal sparing yang kamu buat.</p></div><button id="closeNotifications" class="icon-button" type="button" aria-label="Tutup notifikasi">×</button></div><div id="notificationList"></div><button id="markNotificationsRead" class="button button-outline hidden" type="button">Tandai semua dibaca</button></section>
     <section class="match-hero"><div><span class="eyebrow">TEAM MATCHMAKING</span><h1>Butuh lawan sparing?<br><span class="text-accent">Temukan tim tandingmu.</span></h1><p>Jadwal sparing dibuat melalui booking lapangan. Temukan tim lain yang siap bertanding di waktu dan level yang cocok.</p></div><div class="match-hero-badge"><span>⚽</span><strong>Cari lawan sparing</strong><small>Hubungkan tim. Atur pertandingan.</small></div></section>
     <section class="section compact-section">
       <div class="section-heading"><div><span class="eyebrow">TANTANGAN SPARING</span><h2>Jadwal sparing terbuka</h2><p class="muted">Pilih jadwal yang cocok untuk mempertemukan tim kamu dengan tim yang membuka tantangan.</p></div><div class="session-actions"><button id="notificationsButton" class="button button-outline hidden" type="button">Notifikasi tim <span id="notificationCount"></span></button></div></div>
       <div id="sessionMessage" class="notice">Memuat jadwal sparing…</div>
       <div id="sessionsList" class="session-grid session-grid-large"></div>
     </section>
-    <section id="myNotifications" class="panel create-panel hidden" aria-live="polite"><div class="panel-heading"><div><span class="eyebrow">NOTIFIKASI</span><h2>Info untuk tim kamu</h2><p class="muted">Pembaruan ketika ada tim yang memilih jadwal sparing yang kamu buat.</p></div><button id="closeNotifications" class="icon-button" type="button" aria-label="Tutup notifikasi">×</button></div><div id="notificationList"></div><button id="markNotificationsRead" class="button button-outline hidden" type="button">Tandai semua dibaca</button></section>
+
 
   </main>
   <footer class="footer"><div class="container footer-inner"><a class="brand" href="./index.html"><span class="brand-mark">F</span><span>FUTSAL<span class="brand-light">KITA</span></span></a><span>Temukan tim lawan, jadwalkan sparing.</span><a href="./index.html">Cek lapangan ↗</a></div></footer>
@@ -97,6 +98,7 @@
       const list=$('notificationList');list.replaceChildren()
       const unread=(data||[]).filter(item=>!item.read_at).length
       $('notificationCount').textContent=unread?`(${unread})`:''
+      window.dispatchEvent(new CustomEvent('futsalkita-notifications-updated',{detail:{unread}}))
       $('markNotificationsRead').classList.toggle('hidden',unread===0)
       if(!(data||[]).length){const empty=document.createElement('p');empty.className='muted';empty.textContent='Belum ada notifikasi. Jika tim lain memilih jadwal yang kamu buat, informasinya akan muncul di sini.';list.append(empty);return}
       for(const item of data){const row=document.createElement('div');row.className='match-notification'+(item.read_at?'':' is-unread');const message=document.createElement('p');message.textContent=item.message;const time=document.createElement('small');time.textContent=new Date(item.created_at).toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short'});row.append(message,time);list.append(row)}
