@@ -354,3 +354,19 @@ body.modal-open { overflow: hidden; }
   color: var(--muted);
   font-weight: 400;
 }
+
+
+/* Booking terms consent statement (no checkbox required) */
+.booking-terms-consent {
+  margin: 16px 0 10px;
+  max-width: 760px;
+  color: var(--muted);
+  font-size: .82rem;
+  line-height: 1.7;
+}
+.booking-terms-consent a {
+  color: var(--green-dark);
+  font-weight: 750;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
