@@ -25,7 +25,7 @@ export function initAuthNav() {
     notificationLink.className = 'nav-notification-link hidden'
     notificationLink.href = './matchmaking.html#myNotifications'
     notificationLink.setAttribute('aria-label', 'Notifikasi sparing')
-    notificationLink.innerHTML = '<span aria-hidden="true">♧</span><span class="nav-notification-label">Notifikasi</span><span id="navNotificationBadge" class="nav-notification-badge hidden">0</span>'
+    notificationLink.innerHTML = '<span aria-hidden="true">🔔</span><span class="nav-notification-label">Notifikasi</span><span id="navNotificationBadge" class="nav-notification-badge hidden">0</span>'
     greeting.insertAdjacentElement('afterend', notificationLink)
   }
   const refreshNotificationCount = async (user) => {
