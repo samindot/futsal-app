@@ -6,6 +6,37 @@ alter table public.matchmaking_sessions
 create index if not exists matchmaking_sessions_booking_idx
   on public.matchmaking_sessions(booking_id, status);
 
+-- Link older sessions to their original booking when the match is unambiguous.
+update public.matchmaking_sessions s
+set booking_id = (
+  select b.id
+  from public.bookings b
+  join public.fields f on f.id = b.field_id
+  where b.created_by = s.host_id
+    and b.booking_date = s.session_date
+    and b.start_time = s.start_time
+    and b.duration_hours = s.duration_hours
+    and (
+      s.venue = f.name
+      or s.venue = f.name || ' — ' || trim(coalesce(f.location, ''))
+    )
+  limit 1
+)
+where s.booking_id is null
+  and (
+    select count(*)
+    from public.bookings b
+    join public.fields f on f.id = b.field_id
+    where b.created_by = s.host_id
+      and b.booking_date = s.session_date
+      and b.start_time = s.start_time
+      and b.duration_hours = s.duration_hours
+      and (
+        s.venue = f.name
+        or s.venue = f.name || ' — ' || trim(coalesce(f.location, ''))
+      )
+  ) = 1;
+
 create or replace function public.create_matchmaking_for_booking(
   p_booking_id uuid,
   p_title text,
