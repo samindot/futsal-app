@@ -1,5 +1,6 @@
 import { supabase } from './supabase.js'
 import { initAuthNav } from './nav-auth.js'
+import { getCurrentProfile } from './api.js'
 
 const $=id=>document.getElementById(id)
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
@@ -8,8 +9,25 @@ async function checkAuth(){
  const {data,error}=await supabase.auth.getSession()
  if(error) throw error
  const user=data.session?.user
- $('boothAuth').textContent=user?'Login sebagai '+(user.user_metadata?.display_name||user.email||'petugas')+'. Server tetap memverifikasi keanggotaan venue saat token diproses.':'Belum login. Login dengan akun petugas venue.'
- $('redeemButton').disabled=!user
+ if(!user){
+  $('boothAuth').textContent='Belum login. Halaman ini khusus admin/petugas venue.'
+  $('redeemButton').disabled=true
+  return
+ }
+ const profile=await getCurrentProfile()
+ const {data:memberships,error:membershipError}=await supabase.from('venue_members').select('id,role').eq('user_id',user.id).eq('is_active',true).limit(1)
+ if(membershipError) throw membershipError
+ const isVenueStaff=Boolean(memberships?.length)
+ const isAdmin=profile?.role==='admin'
+ if(!isAdmin&&!isVenueStaff){
+  $('boothAuth').textContent='Akses ditolak. Booth hanya untuk admin atau petugas venue.'
+  $('redeemButton').disabled=true
+  $('redeemForm').classList.add('hidden')
+  return
+ }
+ $('boothAuth').textContent='Login sebagai '+(user.user_metadata?.display_name||user.email||'petugas')+'. Hak akses: '+(isAdmin?'admin':memberships.map(m=>m.role).join(', '))+'. Server tetap memverifikasi keanggotaan venue saat token diproses.'
+ $('redeemButton').disabled=false
+ $('redeemForm').classList.remove('hidden')
 }
 $('redeemForm').addEventListener('submit',async e=>{
  e.preventDefault()
