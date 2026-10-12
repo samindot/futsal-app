@@ -46,6 +46,10 @@
         <p id="bookingHistoryMessage" class="notice">Memuat riwayat booking…</p>
         <div id="bookingHistoryList" class="session-grid session-grid-large"></div>
       </section>
+      <section id="venueStaffAccess" class="section compact-section hidden">
+        <div class="section-heading"><div><span class="eyebrow">OPERASIONAL VENUE</span><h2>Akses petugas</h2><p class="muted">Akun ini terdaftar sebagai anggota aktif venue.</p></div></div>
+        <a class="button button-accent" href="./booth.html">Buka Booth Check-in →</a>
+      </section>
     </section>
     <section id="adminDashboard" class="hidden">
       <section class="player-dashboard-intro">
@@ -60,6 +64,13 @@
           <h2>Kalender & Booking</h2>
           <p>Lihat jadwal semua lapangan, buat booking, perbarui status, catat pembayaran, dan atur tarif per jam.</p>
           <span class="player-choice-link">Buka kalender booking <span aria-hidden="true">→</span></span>
+        </a>
+        <a class="player-choice-card" href="./booth.html">
+          <span class="player-choice-icon" aria-hidden="true">✓</span>
+          <span class="eyebrow">CHECK-IN VENUE</span>
+          <h2>Booth Check-in</h2>
+          <p>Validasi QR kehadiran pemain Open Play. Akses operasional untuk admin dan petugas venue.</p>
+          <span class="player-choice-link">Buka booth check-in <span aria-hidden="true">→</span></span>
         </a>
         <a class="player-choice-card" href="./index.html#availability">
           <span class="player-choice-icon" aria-hidden="true">↗</span>
@@ -188,6 +199,14 @@
       const user = data.session.user
       const name = user.user_metadata?.display_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Pemain'
       const profile = await getCurrentProfile()
+      let activeVenueStaff = false
+      try {
+        const { data: memberships, error: membershipError } = await supabase.from('venue_members').select('id').eq('user_id', user.id).eq('is_active', true).limit(1)
+        if (membershipError) throw membershipError
+        activeVenueStaff = Boolean(memberships?.length)
+      } catch (membershipError) {
+        console.warn('Could not check venue membership for booth access', membershipError)
+      }
       if (profile?.role === 'admin') {
         document.getElementById('playerDashboard').classList.add('hidden')
         document.getElementById('adminDashboard').classList.remove('hidden')
@@ -197,6 +216,7 @@
         document.querySelector('.footer-inner > a:last-child').textContent = 'Kalender booking ↗'
       } else {
         document.getElementById('welcomeTitle').textContent = 'Book? Atau cari lawan, ' + name + '?'
+        if (activeVenueStaff) document.getElementById('venueStaffAccess').classList.remove('hidden')
         await loadBookingHistory()
       }
     }
