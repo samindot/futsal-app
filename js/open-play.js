@@ -109,12 +109,33 @@ async function makeToken(id,card) {
     box.querySelector('.copy-token').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(token);box.querySelector('.copy-token').textContent='Tersalin'}catch{box.querySelector('.token-text').textContent=token}})
   }catch(e){$('sessionMessage').innerHTML='<div class="op-message error">'+esc(e.message)+'</div>'}
 }
+const playersInput = $('maxPlayers')
+const decreasePlayers = $('decreasePlayers')
+const increasePlayers = $('increasePlayers')
+function normalizePlayerCount() {
+  const parsed = Number.parseInt(playersInput.value, 10)
+  const value = Number.isFinite(parsed) ? Math.min(30, Math.max(2, parsed)) : 2
+  playersInput.value = String(value)
+  decreasePlayers.disabled = value <= 2 || !currentUser
+  increasePlayers.disabled = value >= 30 || !currentUser
+  return value
+}
+decreasePlayers.addEventListener('click', () => {
+  playersInput.value = String(normalizePlayerCount() - 1)
+  normalizePlayerCount()
+})
+increasePlayers.addEventListener('click', () => {
+  playersInput.value = String(normalizePlayerCount() + 1)
+  normalizePlayerCount()
+})
+playersInput.addEventListener('change', normalizePlayerCount)
+playersInput.addEventListener('blur', normalizePlayerCount)
 $('createForm').addEventListener('submit',async e=>{
   e.preventDefault()
   if(!currentUser){$('createMessage').innerHTML='<div class="op-message error">Login terlebih dahulu.</div>';return}
   const button=$('createButton');button.disabled=true;button.textContent='Membuat sesi…'
   try{
-    const {data,error}=await supabase.rpc('create_open_play_session',{p_booking_id:$('bookingSelect').value,p_title:$('sessionTitle').value.trim(),p_max_players:Number($('maxPlayers').value),p_skill_level:$('skillLevel').value,p_notes:$('sessionNotes').value.trim()||null})
+    const {data,error}=await supabase.rpc('create_open_play_session',{p_booking_id:$('bookingSelect').value,p_title:$('sessionTitle').value.trim(),p_max_players:normalizePlayerCount(),p_skill_level:$('skillLevel').value,p_notes:$('sessionNotes').value.trim()||null})
     if(error) throw error
     $('createMessage').innerHTML='<div class="op-message">Sesi Open Play berhasil dibuat. Host otomatis terdaftar sebagai peserta.</div>'
     $('sessionTitle').value='';$('sessionNotes').value=''
