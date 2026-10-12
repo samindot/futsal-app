@@ -129,40 +129,40 @@ create index if not exists open_play_checkins_venue_time_idx
 -- SECURITY DEFINER helpers avoid recursive RLS when policies cross-reference membership/session tables.
 create or replace function public.is_active_venue_member(p_venue_id uuid)
 returns boolean language sql stable security definer set search_path = ''
-as $$
+as $function$
   select exists (
     select 1 from public.venue_members vm
     where vm.venue_id = p_venue_id and vm.user_id = (select auth.uid()) and vm.is_active
   );
-$$;
+$function$;
 
 create or replace function public.can_manage_venue_members(p_venue_id uuid)
 returns boolean language sql stable security definer set search_path = ''
-as $$
+as $function$
   select exists (
     select 1 from public.venue_members vm
     where vm.venue_id = p_venue_id and vm.user_id = (select auth.uid())
       and vm.is_active and vm.role in ('owner','manager')
   );
-$$;
+$function$;
 
 create or replace function public.is_open_play_participant(p_session_id uuid)
 returns boolean language sql stable security definer set search_path = ''
-as $$
+as $function$
   select exists (
     select 1 from public.open_play_participants p
     where p.session_id = p_session_id and p.player_id = (select auth.uid())
   );
-$$;
+$function$;
 
 create or replace function public.is_open_play_host(p_session_id uuid)
 returns boolean language sql stable security definer set search_path = ''
-as $$
+as $function$
   select exists (
     select 1 from public.open_play_sessions s
     where s.id = p_session_id and s.host_id = (select auth.uid())
   );
-$$;
+$function$;
 
 
 alter table public.venues enable row level security;
@@ -227,7 +227,7 @@ revoke insert, update, delete on public.venues, public.venue_members,
 create or replace function public.create_venue(p_name text, p_location text default null)
 returns uuid
 language plpgsql security definer set search_path = ''
-as $$
+as $function$
 declare
   v_user uuid := (select auth.uid());
   v_venue_id uuid;
@@ -245,7 +245,7 @@ begin
   values (v_venue_id, v_user, 'owner');
   return v_venue_id;
 end;
-$$;
+$function$;
 
 create or replace function public.create_open_play_session(
   p_booking_id uuid,
@@ -256,7 +256,7 @@ create or replace function public.create_open_play_session(
 )
 returns uuid
 language plpgsql security definer set search_path = ''
-as $$
+as $function$
 declare
   v_user uuid := (select auth.uid());
   v_booking public.bookings%rowtype;
@@ -288,12 +288,12 @@ begin
   end if;
   return v_session_id;
 end;
-$$;
+$function$;
 
 create or replace function public.join_open_play_session(p_session_id uuid)
 returns text
 language plpgsql security definer set search_path = ''
-as $$
+as $function$
 declare
   v_user uuid := (select auth.uid());
   v_session public.open_play_sessions%rowtype;
@@ -320,12 +320,12 @@ begin
   if v_joined >= v_session.max_players then update public.open_play_sessions set status = 'full' where id = p_session_id; end if;
   return 'joined';
 end;
-$$;
+$function$;
 
 create or replace function public.leave_open_play_session(p_session_id uuid)
 returns void
 language plpgsql security definer set search_path = ''
-as $$
+as $function$
 declare
   v_user uuid := (select auth.uid());
   v_session public.open_play_sessions%rowtype;
@@ -341,13 +341,13 @@ begin
   if not found then raise exception 'Kamu belum bergabung ke sesi ini'; end if;
   update public.open_play_sessions set status = 'open' where id = p_session_id and status = 'full';
 end;
-$$;
+$function$;
 
 -- Return a short-lived one-time token; the raw token is never stored in the database.
 create or replace function public.create_open_play_checkin_token(p_session_id uuid)
 returns text
 language plpgsql security definer set search_path = ''
-as $$
+as $function$
 declare
   v_user uuid := (select auth.uid());
   v_session public.open_play_sessions%rowtype;
@@ -371,13 +371,13 @@ begin
   values (p_session_id, v_user, encode(public.digest(v_token, 'sha256'), 'hex'), now() + interval '2 minutes');
   return v_token;
 end;
-$$;
+$function$;
 
 -- Booth operator must be an active member of the venue where the session is booked.
 create or replace function public.redeem_open_play_checkin_token(p_token text)
 returns table(player_id uuid, player_name text, session_id uuid, session_title text, checked_in_at timestamptz)
 language plpgsql security definer set search_path = ''
-as $$
+as $function$
 declare
   v_user uuid := (select auth.uid());
   v_token public.open_play_checkin_tokens%rowtype;
@@ -427,7 +427,7 @@ begin
 
   return query select v_token.player_id, v_player_name, v_session.id, v_session.title, v_now;
 end;
-$$;
+$function$;
 
 revoke all on function public.is_active_venue_member(uuid) from public;
 revoke all on function public.can_manage_venue_members(uuid) from public;
