@@ -31,13 +31,32 @@ async function loadAuth() {
 async function loadBookings() {
   const {data,error}=await supabase.from('bookings').select('id,booking_date,start_time,duration_hours,status,field_id,venue_id,fields(name,location)').eq('created_by',currentUser.id).eq('status','confirmed').order('booking_date',{ascending:true})
   if(error) {
+    bookings=[]
     $('bookingSelect').innerHTML='<option value="">Gagal memuat booking</option>'
     $('createMessage').innerHTML='<div class="op-message error">'+esc(error.message)+'</div>'
     return
   }
-  bookings=data||[]
+
+  // Hide bookings already used by an active Open Play session. The database also
+  // has a partial unique index as the final guard against concurrent duplicate creation.
+  const {data: activeSessions, error: sessionsError} = await supabase
+    .from('open_play_sessions')
+    .select('booking_id')
+    .in('status', ['open','full'])
+  if(sessionsError) {
+    bookings=[]
+    $('bookingSelect').innerHTML='<option value="">Tidak dapat memeriksa sesi Open Play</option>'
+    $('createMessage').innerHTML='<div class="op-message error">Booking tidak ditampilkan karena status sesi Open Play gagal diverifikasi. Muat ulang halaman atau coba lagi. '+esc(sessionsError.message)+'</div>'
+    return
+  }
+
+  const usedBookingIds = new Set((activeSessions||[]).map(session => session.booking_id))
+  bookings=(data||[]).filter(booking => !usedBookingIds.has(booking.id))
   $('bookingSelect').innerHTML='<option value="">Pilih booking…</option>'+bookings.map(b=>'<option value="'+esc(b.id)+'">'+esc(b.fields?.name||'Lapangan')+' · '+esc(dateTime(b.booking_date,b.start_time,b.duration_hours))+'</option>').join('')
-  if(!bookings.length) $('bookingSelect').innerHTML='<option value="">Belum ada booking terkonfirmasi</option>'
+  if(!bookings.length) {
+    $('bookingSelect').innerHTML='<option value="">Tidak ada booking yang bisa dibuka</option>'
+    $('createMessage').innerHTML='<div class="op-message">Semua booking terkonfirmasi sudah dipakai sesi Open Play aktif, atau belum ada booking yang memenuhi syarat.</div>'
+  }
 }
 async function loadSessions() {
   $('sessionList').innerHTML='<div class="op-empty">Memuat sesi…</div>'
@@ -139,7 +158,7 @@ $('createForm').addEventListener('submit',async e=>{
     if(error) throw error
     $('createMessage').innerHTML='<div class="op-message">Sesi Open Play berhasil dibuat. Host otomatis terdaftar sebagai peserta.</div>'
     $('sessionTitle').value='';$('sessionNotes').value=''
-    await loadSessions()
+    await Promise.all([loadBookings(),loadSessions()])
   }catch(e){$('createMessage').innerHTML='<div class="op-message error">'+esc(e.message)+'</div>'}
   finally{button.disabled=false;button.textContent='Buat sesi Open Play'}
 })
