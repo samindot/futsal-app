@@ -178,10 +178,11 @@ begin
   insert into public.open_play_checkins(session_id, venue_id, player_id, checked_in_by, method)
   values (v_token_session_id, v_session_venue_id, v_token_player_id, v_user, 'booth_qr');
 
-  update public.open_play_participants
-  set attendance_status = 'checked_in', checked_in_at = v_now
-  where session_id = v_token_session_id
-    and player_id = v_token_player_id;
+  update public.open_play_participants as op
+  set attendance_status = 'checked_in',
+      checked_in_at = v_now
+  where op.session_id = v_token_session_id
+    and op.player_id = v_token_player_id;
 
   update public.open_play_checkin_tokens
   set used_at = v_now
