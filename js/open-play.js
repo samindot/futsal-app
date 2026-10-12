@@ -13,6 +13,7 @@ initAuthNav()
 let currentUser = null
 let sessions = []
 let bookings = []
+let myParticipants = new Map()
 
 async function loadAuth() {
   const {data,error}=await supabase.auth.getSession()
@@ -46,6 +47,11 @@ async function loadSessions() {
     return
   }
   sessions=data||[]
+  myParticipants = new Map()
+  if(currentUser && sessions.length) {
+    const {data: ownRows, error: ownError} = await supabase.from('open_play_participants').select('session_id,status,attendance_status').eq('player_id',currentUser.id)
+    if(!ownError) for(const row of (ownRows||[])) myParticipants.set(row.session_id,row)
+  }
   if(!sessions.length){$('sessionList').innerHTML='<div class="op-empty">Belum ada sesi Open Play. Jika punya booking terkonfirmasi, kamu bisa membuka sesi pertama.</div>';return}
   $('sessionList').replaceChildren()
   for(const s of sessions){
@@ -54,8 +60,12 @@ async function loadSessions() {
     card.innerHTML='<h3>'+esc(s.title)+'</h3><div class="op-meta">'+esc(s.bookings?.fields?.name||'Lapangan')+' · '+esc(dateTime(s.bookings?.booking_date,s.bookings?.start_time,s.bookings?.duration_hours))+'</div><p class="op-meta">Kapasitas '+esc(s.max_players)+' pemain · '+esc(skill)+' · '+(s.status==='full'?'Penuh':'Terbuka')+'</p>'+(s.notes?'<p>'+esc(s.notes)+'</p>':'')
     const actions=document.createElement('div');actions.className='op-actions'
     if(currentUser){
-      if(s.host_id===currentUser.id) {
-        const qr=document.createElement('button');qr.className='button button-accent';qr.textContent='Buat QR check-in';qr.addEventListener('click',()=>makeToken(s.id,card));actions.append(qr)
+      const participant=myParticipants.get(s.id)
+      if(participant?.status==='joined') {
+        const qr=document.createElement('button');qr.className='button button-accent';qr.textContent=participant.attendance_status==='checked_in'?'Sudah check-in':'Buat QR check-in';qr.disabled=participant.attendance_status==='checked_in';qr.addEventListener('click',()=>makeToken(s.id,card));actions.append(qr)
+        if(participant.attendance_status!=='checked_in'){
+          const leave=document.createElement('button');leave.className='button button-outline';leave.textContent='Batal ikut';leave.addEventListener('click',()=>leaveSession(s.id));actions.append(leave)
+        }
       } else {
         const join=document.createElement('button');join.className='button button-accent';join.textContent='Gabung sesi';join.addEventListener('click',()=>joinSession(s.id));actions.append(join)
       }
@@ -73,6 +83,14 @@ async function joinSession(id) {
     $('sessionMessage').innerHTML='<div class="op-message">Respons server: '+esc(typeof data==='string'?data:JSON.stringify(data))+'</div>'
     await loadSessions()
   }catch(e){$('sessionMessage').innerHTML='<div class="op-message error">'+esc(e.message)+'</div>'}
+}
+async function leaveSession(id) {
+  try {
+    const {error}=await supabase.rpc('leave_open_play_session',{p_session_id:id})
+    if(error) throw error
+    $('sessionMessage').innerHTML='<div class="op-message">Kamu sudah keluar dari sesi.</div>'
+    await loadSessions()
+  } catch(e) {$('sessionMessage').innerHTML='<div class="op-message error">'+esc(e.message)+'</div>'}
 }
 async function makeToken(id,card) {
   try{
