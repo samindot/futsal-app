@@ -9,7 +9,7 @@
   <main class="container dashboard-main">
     <div class="dashboard-heading"><div><span class="eyebrow">PENGELOLAAN LAPANGAN</span><h1>Kalender booking</h1><p class="muted">Klik slot kosong untuk membuat booking, atau booking aktif untuk mengubah status dan pembayaran.</p></div><label class="date-control hidden"><span>Tanggal booking</span><input id="bookingDate" type="date"></label></div>
     <div id="pageMessage" class="notice">Memeriksa akses akun…</div>
-    <div id="bookingLegend" class="booking-legend hidden"><span><i class="legend-open"></i>Kosong</span><span><i class="legend-booked"></i>Terisi</span><span><i class="legend-paid"></i>Lunas</span><span><i class="legend-partial"></i>DP / sebagian</span></div>
+    <div id="bookingLegend" class="booking-legend hidden"><span><i class="legend-open"></i>Kosong</span><span><i class="legend-booked"></i>Terisi</span><span><i class="legend-past"></i>Jam lewat</span><span><i class="legend-paid"></i>Lunas</span><span><i class="legend-partial"></i>DP / sebagian</span></div>
     <div id="calendarWrap" class="calendar-wrap hidden"><div id="calendar" class="calendar-grid admin-calendar"></div></div>
     <section id="adminFields" class="panel admin-fields hidden"><div><h2>Lapangan aktif</h2><p class="muted">Atur tarif per jam tiap lapangan. Perubahan langsung dipakai di halaman booking publik.</p></div><div id="fieldSummary" class="field-summary"></div></section>
   </main>
@@ -46,6 +46,12 @@
     let fields = [], bookings = [], selectedField = null, selectedHour = null, editing = null
     const dateInput = $('bookingDate')
     dateInput.value = localDate(); dateInput.min = localDate()
+    function isPastSlot(hour) {
+      const today = localDate()
+      if (dateInput.value < today) return true
+      if (dateInput.value > today) return false
+      return hour <= new Date().getHours()
+    }
     function closeModal() { $('bookingModal').classList.add('hidden'); editing = null }
     $('closeModal').addEventListener('click', closeModal)
     $('cancelModal').addEventListener('click', closeModal)
@@ -92,9 +98,15 @@
           const slot = document.createElement('button')
           slot.type='button'; slot.className='slot'
           if (!booking) {
-            slot.classList.add('slot-free'); slot.textContent='+ Tambah'
-            slot.disabled = dateInput.value < localDate()
-            slot.addEventListener('click',()=>openCreate(field,hour))
+            if (isPastSlot(hour)) {
+              slot.classList.add('slot-past')
+              slot.textContent = 'Lewat'
+              slot.disabled = true
+              slot.setAttribute('aria-label', field.name + ', jam ' + String(hour).padStart(2,'0') + ':00 sudah lewat')
+            } else {
+              slot.classList.add('slot-free'); slot.textContent='+ Tambah'
+              slot.addEventListener('click',()=>openCreate(field,hour))
+            }
           } else {
             const start = Number(String(booking.start_time).slice(0,2))
             if (hour !== start) { slot.classList.add('slot-continuation'); slot.textContent='↳ '+booking.customer_name; slot.disabled=true }
