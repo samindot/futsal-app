@@ -32,15 +32,15 @@ begin
   if v_user is null then raise exception ''Silakan login terlebih dahulu''; end if;
   select * into v_session from public.open_play_sessions where id = p_session_id;
   if not found then raise exception ''Sesi mabar tidak ditemukan''; end if;
-  select * into v_booking from public.bookings where id = v_session.booking_id;
+  select * into v_booking from public.bookings where id = (v_session).booking_id;
   if not exists (
     select 1 from public.open_play_participants p
     where p.session_id = p_session_id and p.player_id = v_user
       and p.status = ''joined'' and p.attendance_status = ''registered''
   ) then raise exception ''Hanya peserta yang belum check-in yang dapat membuat QR''; end if;
-  if now() < ((v_booking.booking_date + v_booking.start_time) at time zone ''Asia/Jakarta'') - interval ''3 hours''
-     or now() > ((v_booking.booking_date + v_booking.start_time) at time zone ''Asia/Jakarta'')
-       + make_interval(hours => v_booking.duration_hours) + interval ''2 hours'' then
+  if now() < (((v_booking).booking_date + (v_booking).start_time) at time zone ''Asia/Jakarta'') - interval ''3 hours''
+     or now() > (((v_booking).booking_date + (v_booking).start_time) at time zone ''Asia/Jakarta'')
+       + make_interval(hours => (v_booking).duration_hours) + interval ''2 hours'' then
     raise exception ''QR check-in hanya tersedia mendekati jadwal bermain''; end if;
   insert into public.open_play_checkin_tokens(session_id, player_id, token_hash, expires_at)
   values (p_session_id, v_user, encode(extensions.digest(v_token, ''sha256''), ''hex''), now() + interval ''2 minutes'');
@@ -73,15 +73,15 @@ begin
   if v_token.expires_at <= v_now then raise exception ''QR sudah kedaluwarsa. Minta pemain membuat QR baru''; end if;
 
   select * into v_session from public.open_play_sessions where id = v_token.session_id;
-  select * into v_booking from public.bookings where id = v_session.booking_id;
+  select * into v_booking from public.bookings where id = (v_session).booking_id;
   if not exists (
     select 1 from public.venue_members vm
-    where vm.venue_id = v_session.venue_id and vm.user_id = v_user and vm.is_active
+    where vm.venue_id = (v_session).venue_id and vm.user_id = v_user and vm.is_active
   ) then raise exception ''Akun petugas tidak memiliki akses ke venue sesi ini''; end if;
-  if v_session.status not in (''open'',''full'') then raise exception ''Sesi ini sudah ditutup''; end if;
-  if v_now < ((v_booking.booking_date + v_booking.start_time) at time zone ''Asia/Jakarta'') - interval ''3 hours''
-     or v_now > ((v_booking.booking_date + v_booking.start_time) at time zone ''Asia/Jakarta'')
-       + make_interval(hours => v_booking.duration_hours) + interval ''2 hours'' then
+  if (v_session).status not in (''open'',''full'') then raise exception ''Sesi ini sudah ditutup''; end if;
+  if v_now < (((v_booking).booking_date + (v_booking).start_time) at time zone ''Asia/Jakarta'') - interval ''3 hours''
+     or v_now > (((v_booking).booking_date + (v_booking).start_time) at time zone ''Asia/Jakarta'')
+       + make_interval(hours => (v_booking).duration_hours) + interval ''2 hours'' then
     raise exception ''Di luar jendela waktu check-in''; end if;
   if not exists (
     select 1 from public.open_play_participants p
@@ -94,13 +94,13 @@ begin
   where u.id = v_token.player_id;
 
   insert into public.open_play_checkins(session_id, venue_id, player_id, checked_in_by, method)
-  values (v_token.session_id, v_session.venue_id, v_token.player_id, v_user, ''booth_qr'');
+  values (v_token.session_id, (v_session).venue_id, v_token.player_id, v_user, ''booth_qr'');
   update public.open_play_participants
   set attendance_status = ''checked_in'', checked_in_at = v_now
   where session_id = v_token.session_id and player_id = v_token.player_id;
   update public.open_play_checkin_tokens set used_at = v_now where id = v_token.id;
 
-  return query select v_token.player_id, v_player_name, v_session.id, v_session.title, v_now;
+  return query select v_token.player_id, v_player_name, (v_session).id, (v_session).title, v_now;
 end;
 ';
 
