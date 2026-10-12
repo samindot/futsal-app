@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10251d">
+  <title>Pilih Aktivitas — FutsalKita</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body class="dashboard-page">
+  <nav class="nav container">
+    <a class="brand" href="./dashboard.html"><span class="brand-mark">F</span><span>FUTSAL<span class="brand-light">KITA</span></span></a>
+    <div class="nav-links">
+      <span id="userGreeting" class="nav-greeting hidden"></span><a id="dashboardLink" class="hidden" href="./dashboard.html">Dashboard</a>
+      <a id="adminLink" class="hidden" href="./calendar.html">Kalender admin</a>
+      <a id="loginLink" class="button button-small button-dark" href="./login.html">Login / Daftar</a>
+      <button id="logoutButton" class="button button-small button-outline hidden" type="button">Logout</button>
+    </div>
+  </nav>
+  <main class="container dashboard-main">
+    <section id="playerDashboard">
+    <section class="player-dashboard-intro">
+      <span class="eyebrow">AREA PEMAIN</span>
+      <h1 id="welcomeTitle">Book? Atau cari lawan?</h1>
+      <p>Pilih kebutuhanmu untuk melanjutkan. Kamu bisa memesan lapangan untuk tim sendiri atau mencari tim lawan untuk sparing.</p>
+    </section>
+    <section class="player-choice-grid" aria-label="Pilih aktivitas">
+      <a class="player-choice-card" href="./index.html#availability">
+        <span class="player-choice-icon" aria-hidden="true">⚽</span>
+        <span class="eyebrow">BOOKING LAPANGAN</span>
+        <h2>Booking Lapangan</h2>
+        <p>Lihat jadwal yang tersedia, pilih lapangan dan waktu bermain, lalu kirim permintaan booking kepada pengelola.</p>
+        <span class="player-choice-link">Lihat jadwal lapangan <span aria-hidden="true">→</span></span>
+      </a>
+      <a class="player-choice-card" href="./open-play.html"><span class="player-choice-icon" aria-hidden="true">＋</span><span class="eyebrow">OPEN PLAY</span><h2>Open Play / Mabar</h2><p>Buka sesi dari booking terkonfirmasi atau bergabung sebagai pemain individual. Check-in kehadiran lewat booth venue.</p><span class="player-choice-link">Cari sesi mabar <span aria-hidden="true">→</span></span></a>
+      <a class="player-choice-card" href="./matchmaking.html">
+        <span class="player-choice-icon" aria-hidden="true">↔</span>
+        <span class="eyebrow">TEAM MATCHMAKING</span>
+        <h2>Team Matchmaking</h2>
+        <p>Temukan tawaran sparing dari tim lain atau pasang jadwal tim kamu untuk mencari lawan tanding.</p>
+        <span class="player-choice-link">Cari lawan sparing <span aria-hidden="true">→</span></span>
+      </a>
+    </section>
+      <section class="section compact-section booking-history-section" id="bookingHistorySection">
+        <div class="section-heading"><div><span class="eyebrow">RIWAYAT BOOKING</span><h2>Booking lapangan saya</h2><p class="muted">Kelola pencarian lawan dari booking yang sudah kamu buat. Membatalkan pencarian tidak membatalkan booking lapangan.</p></div></div>
+        <p id="bookingHistoryMessage" class="notice">Memuat riwayat booking…</p>
+        <div id="bookingHistoryList" class="session-grid session-grid-large"></div>
+      </section>
+      <section id="venueStaffAccess" class="section compact-section hidden">
+        <div class="section-heading"><div><span class="eyebrow">OPERASIONAL VENUE</span><h2>Akses petugas</h2><p class="muted">Akun ini terdaftar sebagai anggota aktif venue.</p></div></div>
+        <a class="button button-accent" href="./booth.html">Buka Booth Check-in →</a>
+      </section>
+    </section>
+    <section id="adminDashboard" class="hidden">
+      <section class="player-dashboard-intro">
+        <span class="eyebrow">PANEL PENGELOLA</span>
+        <h1 id="adminWelcomeTitle">Dashboard Pengelola</h1>
+        <p>Kelola operasional lapangan dan booking dari sini. Halaman ini khusus untuk pengelola, terpisah dari navigasi pemain.</p>
+      </section>
+      <section class="player-choice-grid" aria-label="Menu pengelola">
+        <a class="player-choice-card admin-choice-primary" href="./calendar.html">
+          <span class="player-choice-icon" aria-hidden="true">▦</span>
+          <span class="eyebrow">OPERASIONAL</span>
+          <h2>Kalender & Booking</h2>
+          <p>Lihat jadwal semua lapangan, buat booking, perbarui status, catat pembayaran, dan atur tarif per jam.</p>
+          <span class="player-choice-link">Buka kalender booking <span aria-hidden="true">→</span></span>
+        </a>
+        <a class="player-choice-card" href="./booth.html">
+          <span class="player-choice-icon" aria-hidden="true">✓</span>
+          <span class="eyebrow">CHECK-IN VENUE</span>
+          <h2>Booth Check-in</h2>
+          <p>Validasi QR kehadiran pemain Open Play. Akses operasional untuk admin dan petugas venue.</p>
+          <span class="player-choice-link">Buka booth check-in <span aria-hidden="true">→</span></span>
+        </a>
+        <a class="player-choice-card" href="./index.html#availability">
+          <span class="player-choice-icon" aria-hidden="true">↗</span>
+          <span class="eyebrow">HALAMAN PUBLIK</span>
+          <h2>Lihat Halaman Pemain</h2>
+          <p>Periksa tampilan ketersediaan lapangan yang dilihat pelanggan dan alur pengajuan booking.</p>
+          <span class="player-choice-link">Buka halaman publik <span aria-hidden="true">→</span></span>
+        </a>
+      </section>
+    </section>
+  </main>
+  <footer class="footer"><div class="container footer-inner"><a class="brand" href="./dashboard.html"><span class="brand-mark">F</span><span>FUTSAL<span class="brand-light">KITA</span></span></a><span>Pilih aktivitas dan mulai atur pertandinganmu.</span><a href="./index.html">Beranda ↗</a></div></footer>
+  <script type="module">
+    import { supabase } from './js/supabase.js'
+    import { getCurrentProfile, getMyBookings, getMyBookingMatchmaking, createMatchmakingForBooking, refreshBookingStatuses } from './js/api.js'
+    import { initAuthNav } from './js/nav-auth.js'
+    initAuthNav()
+    const $ = id => document.getElementById(id)
+    const timeLabel = value => String(value).slice(0, 5)
+    const money = value => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value || 0)
+    const bookingStart = booking => new Date(booking.booking_date + 'T' + timeLabel(booking.start_time) + ':00+07:00')
+    const localNow = () => new Date()
+    async function loadBookingHistory() {
+      const message = $('bookingHistoryMessage')
+      const root = $('bookingHistoryList')
+      root.replaceChildren()
+      try {
+        await refreshBookingStatuses()
+        const [bookings, linkedSessions] = await Promise.all([getMyBookings(), getMyBookingMatchmaking()])
+        const activeByBooking = new Map()
+        for (const session of linkedSessions) {
+          if (session.status === 'open' || session.status === 'full') activeByBooking.set(session.booking_id, session)
+        }
+        if (!bookings.length) {
+          message.textContent = 'Belum ada riwayat booking dari akun ini.'
+          const link = document.createElement('a')
+          link.className = 'button button-accent'
+          link.href = './index.html#availability'
+          link.textContent = 'Booking lapangan →'
+          root.append(link)
+          return
+        }
+        message.textContent = bookings.length + ' booking ditemukan'
+        for (const booking of bookings) {
+          const card = document.createElement('article')
+          card.className = 'session-card session-card-full booking-history-card'
+          const top = document.createElement('div')
+          top.className = 'session-top'
+          const badge = document.createElement('span')
+          badge.className = 'status-pill ' + (booking.status === 'confirmed' ? 'status-open' : booking.status === 'cancelled' ? 'status-full' : 'status-open')
+          badge.textContent = ({pending:'MENUNGGU KONFIRMASI',confirmed:'TERKONFIRMASI',cancelled:'DIBATALKAN',completed:'SELESAI',no_show:'NO SHOW'})[booking.status] || booking.status.toUpperCase()
+          top.append(badge)
+          const title = document.createElement('h3')
+          title.textContent = (booking.fields?.name || 'Lapangan') + ' · ' + new Date(booking.booking_date + 'T00:00:00').toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'})
+          const detail = document.createElement('p')
+          detail.className = 'session-venue'
+          detail.textContent = timeLabel(booking.start_time) + ' · ' + booking.duration_hours + ' jam · ' + (booking.fields?.location || 'Lokasi belum diatur')
+          const customer = document.createElement('p')
+          customer.className = 'session-notes'
+          customer.textContent = 'Pemesan: ' + booking.customer_name + ' · Dibayar: ' + money(booking.amount_paid)
+          const actions = document.createElement('div')
+          actions.className = 'session-actions'
+          const activeSession = activeByBooking.get(booking.id)
+          const canCreate = ['pending','confirmed'].includes(booking.status) && bookingStart(booking) > localNow()
+          if (bookingStart(booking) <= localNow()) {
+            const unavailable = document.createElement('span')
+            unavailable.className = 'muted'
+            unavailable.textContent = booking.status === 'no_show' ? 'Booking ditandai no show.' : booking.status === 'completed' ? 'Booking sudah selesai.' : 'Waktu main sudah dimulai atau lewat; pencarian lawan ditutup.'
+            actions.append(unavailable)
+          } else if (activeSession) {
+            const active = document.createElement('a')
+            active.className = 'button button-outline button-wide'
+            active.href = './matchmaking.html'
+            active.textContent = 'Pencarian lawan aktif · Lihat →'
+            actions.append(active)
+          } else if (canCreate) {
+            const create = document.createElement('button')
+            create.type = 'button'
+            create.className = 'button button-accent button-wide'
+            create.textContent = 'Cari lawan sparing →'
+            create.addEventListener('click', async () => {
+              const defaultTitle = booking.customer_name ? 'Tim ' + booking.customer_name + ' mencari lawan' : 'Mencari lawan sparing'
+              const teamTitle = window.prompt('Nama tim / judul sparing:', defaultTitle)
+              if (!teamTitle || !teamTitle.trim()) return
+              const skill = window.prompt('Level sparing: any, beginner, intermediate, atau advanced', 'any')
+              if (skill === null) return
+              const normalizedSkill = skill.trim().toLowerCase()
+              if (!['any','beginner','intermediate','advanced'].includes(normalizedSkill)) {
+                message.textContent = 'Level tidak valid. Gunakan any, beginner, intermediate, atau advanced.'
+                message.className = 'notice error'
+                return
+              }
+              create.disabled = true
+              create.textContent = 'Membuat pencarian…'
+              try {
+                await createMatchmakingForBooking(booking.id, teamTitle.trim(), normalizedSkill)
+                message.textContent = 'Pencarian lawan berhasil dibuat dari booking ini.'
+                message.className = 'notice'
+                await loadBookingHistory()
+              } catch (error) {
+                message.textContent = error.message || 'Gagal membuat pencarian lawan.'
+                message.className = 'notice error'
+                create.disabled = false
+                create.textContent = 'Cari lawan sparing →'
+              }
+            })
+            actions.append(create)
+          } else {
+            const unavailable = document.createElement('span')
+            unavailable.className = 'muted'
+            unavailable.textContent = bookingStart(booking) <= localNow() ? 'Waktu main sudah dimulai atau lewat; pencarian lawan ditutup.' : booking.status === 'no_show' ? 'Booking ditandai no show.' : booking.status === 'completed' ? 'Booking sudah selesai.' : booking.status === 'cancelled' ? 'Booking dibatalkan.' : 'Pencarian lawan tidak tersedia untuk booking ini.'
+            actions.append(unavailable)
+          }
+          card.append(top, title, detail, customer, actions)
+          root.append(card)
+        }
+      } catch (error) {
+        message.textContent = 'Gagal memuat riwayat booking: ' + error.message
+        message.className = 'notice error'
+      }
+    }
+    const { data, error } = await supabase.auth.getSession()
+    if (error || !data?.session) {
+      window.location.replace('./login.html?next=dashboard.html')
+    } else {
+      const user = data.session.user
+      const name = user.user_metadata?.display_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Pemain'
+      const profile = await getCurrentProfile()
+      let activeVenueStaff = false
+      try {
+        const { data: memberships, error: membershipError } = await supabase.from('venue_members').select('id').eq('user_id', user.id).eq('is_active', true).limit(1)
+        if (membershipError) throw membershipError
+        activeVenueStaff = Boolean(memberships?.length)
+      } catch (membershipError) {
+        console.warn('Could not check venue membership for booth access', membershipError)
+      }
+      if (profile?.role === 'admin') {
+        document.getElementById('playerDashboard').classList.add('hidden')
+        document.getElementById('adminDashboard').classList.remove('hidden')
+        document.getElementById('adminWelcomeTitle').textContent = 'Dashboard Pengelola, ' + name
+        document.querySelector('.footer-inner > span').textContent = 'Panel operasional FutsalKita.'
+        document.querySelector('.footer-inner > a:last-child').href = './calendar.html'
+        document.querySelector('.footer-inner > a:last-child').textContent = 'Kalender booking ↗'
+      } else {
+        document.getElementById('welcomeTitle').textContent = 'Book? Atau cari lawan, ' + name + '?'
+        if (activeVenueStaff) document.getElementById('venueStaffAccess').classList.remove('hidden')
+        await loadBookingHistory()
+      }
+    }
+  </script>
+</body>
+</html>
