@@ -129,40 +129,40 @@ create index if not exists open_play_checkins_venue_time_idx
 -- SECURITY DEFINER helpers avoid recursive RLS when policies cross-reference membership/session tables.
 create or replace function public.is_active_venue_member(p_venue_id uuid)
 returns boolean language sql stable security definer set search_path = ''
-as $
+as $$
   select exists (
     select 1 from public.venue_members vm
     where vm.venue_id = p_venue_id and vm.user_id = (select auth.uid()) and vm.is_active
   );
-$;
+$$;
 
 create or replace function public.can_manage_venue_members(p_venue_id uuid)
 returns boolean language sql stable security definer set search_path = ''
-as $
+as $$
   select exists (
     select 1 from public.venue_members vm
     where vm.venue_id = p_venue_id and vm.user_id = (select auth.uid())
       and vm.is_active and vm.role in ('owner','manager')
   );
-$;
+$$;
 
 create or replace function public.is_open_play_participant(p_session_id uuid)
 returns boolean language sql stable security definer set search_path = ''
-as $
+as $$
   select exists (
     select 1 from public.open_play_participants p
     where p.session_id = p_session_id and p.player_id = (select auth.uid())
   );
-$;
+$$;
 
 create or replace function public.is_open_play_host(p_session_id uuid)
 returns boolean language sql stable security definer set search_path = ''
-as $
+as $$
   select exists (
     select 1 from public.open_play_sessions s
     where s.id = p_session_id and s.host_id = (select auth.uid())
   );
-$;
+$$;
 
 
 alter table public.venues enable row level security;
