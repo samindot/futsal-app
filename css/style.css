@@ -102,6 +102,7 @@ button:disabled { opacity: .58; cursor: not-allowed; }
 .availability-legend span,.booking-legend span { display: inline-flex; align-items: center; gap: 7px; }
 .availability-legend i,.booking-legend i { width: 9px; height: 9px; border-radius: 3px; display: inline-block; }
 .legend-open { background: #b9e79b; }
+.legend-past { background: #d5dad5; }
 .legend-booked { background: #e7a69c; }
 .legend-paid { background: #72c78e; }
 .legend-partial { background: #e4b94e; }
