@@ -82,7 +82,9 @@ async function loadSessions() {
       const participant=myParticipants.get(s.id)
       if(participant?.status==='joined') {
         const qr=document.createElement('button');qr.className='button button-accent';qr.textContent=participant.attendance_status==='checked_in'?'Sudah check-in':'Buat QR check-in';qr.disabled=participant.attendance_status==='checked_in';qr.addEventListener('click',()=>makeToken(s.id,card));actions.append(qr)
-        if(participant.attendance_status!=='checked_in'){
+        // Host is responsible for the session and must not be able to leave it
+        // like a regular participant. The database RPC also rejects host leave.
+        if(participant.attendance_status!=='checked_in' && s.host_id!==currentUser.id){
           const leave=document.createElement('button');leave.className='button button-outline';leave.textContent='Batal ikut';leave.addEventListener('click',()=>leaveSession(s.id));actions.append(leave)
         }
       } else {
