@@ -23,7 +23,7 @@ export async function getBookings(date) {
   return unwrap(
     supabase.from('bookings')
       .select('id,field_id,booking_date,start_time,duration_hours,customer_name,whatsapp_number,amount_paid,notes,status')
-      .eq('booking_date', date).neq('status', 'cancelled').order('start_time')
+      .eq('booking_date', date).not('status', 'in', '(cancelled,no_show)').order('start_time')
   )
 }
 
