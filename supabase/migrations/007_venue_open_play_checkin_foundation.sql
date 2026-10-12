@@ -129,40 +129,40 @@ create index if not exists open_play_checkins_venue_time_idx
 -- SECURITY DEFINER helpers avoid recursive RLS when policies cross-reference membership/session tables.
 create or replace function public.is_active_venue_member(p_venue_id uuid)
 returns boolean language sql stable security definer set search_path = ''
-as $function$
+as '
   select exists (
     select 1 from public.venue_members vm
     where vm.venue_id = p_venue_id and vm.user_id = (select auth.uid()) and vm.is_active
   );
-$function$;
+';
 
 create or replace function public.can_manage_venue_members(p_venue_id uuid)
 returns boolean language sql stable security definer set search_path = ''
-as $function$
+as '
   select exists (
     select 1 from public.venue_members vm
     where vm.venue_id = p_venue_id and vm.user_id = (select auth.uid())
-      and vm.is_active and vm.role in ('owner','manager')
+      and vm.is_active and vm.role in (''owner'',''manager'')
   );
-$function$;
+';
 
 create or replace function public.is_open_play_participant(p_session_id uuid)
 returns boolean language sql stable security definer set search_path = ''
-as $function$
+as '
   select exists (
     select 1 from public.open_play_participants p
     where p.session_id = p_session_id and p.player_id = (select auth.uid())
   );
-$function$;
+';
 
 create or replace function public.is_open_play_host(p_session_id uuid)
 returns boolean language sql stable security definer set search_path = ''
-as $function$
+as '
   select exists (
     select 1 from public.open_play_sessions s
     where s.id = p_session_id and s.host_id = (select auth.uid())
   );
-$function$;
+';
 
 
 alter table public.venues enable row level security;
@@ -227,25 +227,25 @@ revoke insert, update, delete on public.venues, public.venue_members,
 create or replace function public.create_venue(p_name text, p_location text default null)
 returns uuid
 language plpgsql security definer set search_path = ''
-as $function$
+as '
 declare
   v_user uuid := (select auth.uid());
   v_venue_id uuid;
-  v_name text := nullif(trim(coalesce(p_name,'')), '');
+  v_name text := nullif(trim(coalesce(p_name,'''')), '''');
   v_slug text;
 begin
-  if v_user is null then raise exception 'Silakan login terlebih dahulu'; end if;
-  if v_name is null or length(v_name) > 120 then raise exception 'Nama venue wajib diisi (maksimal 120 karakter)'; end if;
-  v_slug := regexp_replace(lower(v_name), '[^a-z0-9]+', '-', 'g');
-  v_slug := trim(both '-' from v_slug) || '-' || substr(replace(gen_random_uuid()::text,'-',''),1,8);
+  if v_user is null then raise exception ''Silakan login terlebih dahulu''; end if;
+  if v_name is null or length(v_name) > 120 then raise exception ''Nama venue wajib diisi (maksimal 120 karakter)''; end if;
+  v_slug := regexp_replace(lower(v_name), ''[^a-z0-9]+'', ''-'', ''g'');
+  v_slug := trim(both ''-'' from v_slug) || ''-'' || substr(replace(gen_random_uuid()::text,''-'',''''),1,8);
   insert into public.venues(name, slug, location, owner_id)
-  values (v_name, v_slug, nullif(trim(coalesce(p_location,'')), ''), v_user)
+  values (v_name, v_slug, nullif(trim(coalesce(p_location,'''')), ''''), v_user)
   returning id into v_venue_id;
   insert into public.venue_members(venue_id, user_id, role)
-  values (v_venue_id, v_user, 'owner');
+  values (v_venue_id, v_user, ''owner'');
   return v_venue_id;
 end;
-$function$;
+';
 
 create or replace function public.create_open_play_session(
   p_booking_id uuid,
@@ -256,128 +256,128 @@ create or replace function public.create_open_play_session(
 )
 returns uuid
 language plpgsql security definer set search_path = ''
-as $function$
+as '
 declare
   v_user uuid := (select auth.uid());
   v_booking public.bookings%rowtype;
   v_session_id uuid;
-  v_title text := nullif(trim(coalesce(p_title,'')), '');
+  v_title text := nullif(trim(coalesce(p_title,'''')), '''');
 begin
-  if v_user is null then raise exception 'Silakan login terlebih dahulu'; end if;
-  if v_title is null or length(v_title) > 120 then raise exception 'Judul mabar wajib diisi (maksimal 120 karakter)'; end if;
-  if p_max_players is null or p_max_players < 2 or p_max_players > 30 then raise exception 'Kuota pemain harus 2–30'; end if;
-  if coalesce(p_skill_level,'any') not in ('beginner','intermediate','advanced','any') then raise exception 'Level permainan tidak valid'; end if;
+  if v_user is null then raise exception ''Silakan login terlebih dahulu''; end if;
+  if v_title is null or length(v_title) > 120 then raise exception ''Judul mabar wajib diisi (maksimal 120 karakter)''; end if;
+  if p_max_players is null or p_max_players < 2 or p_max_players > 30 then raise exception ''Kuota pemain harus 2–30''; end if;
+  if coalesce(p_skill_level,''any'') not in (''beginner'',''intermediate'',''advanced'',''any'') then raise exception ''Level permainan tidak valid''; end if;
 
   select * into v_booking from public.bookings where id = p_booking_id for update;
-  if not found then raise exception 'Booking tidak ditemukan'; end if;
-  if v_booking.created_by is distinct from v_user then raise exception 'Mabar hanya bisa dibuat dari booking milik akun ini'; end if;
-  if v_booking.status <> 'confirmed' then raise exception 'Booking harus berstatus confirmed sebelum dibuka sebagai mabar'; end if;
-  if ((v_booking.booking_date + v_booking.start_time) at time zone 'Asia/Jakarta') <= now() then raise exception 'Waktu booking sudah lewat'; end if;
-  if exists (select 1 from public.open_play_sessions s where s.booking_id = p_booking_id and s.status in ('open','full')) then
-    raise exception 'Booking ini sudah memiliki sesi mabar aktif'; end if;
+  if not found then raise exception ''Booking tidak ditemukan''; end if;
+  if v_booking.created_by is distinct from v_user then raise exception ''Mabar hanya bisa dibuat dari booking milik akun ini''; end if;
+  if v_booking.status <> ''confirmed'' then raise exception ''Booking harus berstatus confirmed sebelum dibuka sebagai mabar''; end if;
+  if ((v_booking.booking_date + v_booking.start_time) at time zone ''Asia/Jakarta'') <= now() then raise exception ''Waktu booking sudah lewat''; end if;
+  if exists (select 1 from public.open_play_sessions s where s.booking_id = p_booking_id and s.status in (''open'',''full'')) then
+    raise exception ''Booking ini sudah memiliki sesi mabar aktif''; end if;
 
   insert into public.open_play_sessions(venue_id, booking_id, host_id, title, max_players, skill_level, notes)
-  values (v_booking.venue_id, v_booking.id, v_user, v_title, p_max_players, coalesce(p_skill_level,'any'), nullif(trim(coalesce(p_notes,'')), ''))
+  values (v_booking.venue_id, v_booking.id, v_user, v_title, p_max_players, coalesce(p_skill_level,''any''), nullif(trim(coalesce(p_notes,'''')), ''''))
   returning id into v_session_id;
 
   insert into public.open_play_participants(session_id, player_id, status, attendance_status)
-  values (v_session_id, v_user, 'joined', 'registered');
+  values (v_session_id, v_user, ''joined'', ''registered'');
 
   if p_max_players = 1 then
-    update public.open_play_sessions set status = 'full' where id = v_session_id;
+    update public.open_play_sessions set status = ''full'' where id = v_session_id;
   end if;
   return v_session_id;
 end;
-$function$;
+';
 
 create or replace function public.join_open_play_session(p_session_id uuid)
 returns text
 language plpgsql security definer set search_path = ''
-as $function$
+as '
 declare
   v_user uuid := (select auth.uid());
   v_session public.open_play_sessions%rowtype;
   v_existing text;
   v_joined integer;
 begin
-  if v_user is null then raise exception 'Silakan login terlebih dahulu'; end if;
+  if v_user is null then raise exception ''Silakan login terlebih dahulu''; end if;
   select * into v_session from public.open_play_sessions where id = p_session_id for update;
-  if not found then raise exception 'Sesi mabar tidak ditemukan'; end if;
-  if v_session.status <> 'open' then raise exception 'Sesi ini tidak lagi menerima pemain'; end if;
-  if ((select booking_date + start_time from public.bookings where id = v_session.booking_id) at time zone 'Asia/Jakarta') <= now() then
-    raise exception 'Sesi sudah dimulai'; end if;
+  if not found then raise exception ''Sesi mabar tidak ditemukan''; end if;
+  if v_session.status <> ''open'' then raise exception ''Sesi ini tidak lagi menerima pemain''; end if;
+  if ((select booking_date + start_time from public.bookings where id = v_session.booking_id) at time zone ''Asia/Jakarta'') <= now() then
+    raise exception ''Sesi sudah dimulai''; end if;
   select status into v_existing from public.open_play_participants where session_id = p_session_id and player_id = v_user;
-  if v_existing = 'joined' then return 'already_joined'; end if;
-  select count(*) into v_joined from public.open_play_participants where session_id = p_session_id and status = 'joined';
+  if v_existing = ''joined'' then return ''already_joined''; end if;
+  select count(*) into v_joined from public.open_play_participants where session_id = p_session_id and status = ''joined'';
   if v_joined >= v_session.max_players then
-    update public.open_play_sessions set status = 'full' where id = p_session_id;
-    raise exception 'Kuota mabar sudah penuh';
+    update public.open_play_sessions set status = ''full'' where id = p_session_id;
+    raise exception ''Kuota mabar sudah penuh'';
   end if;
   insert into public.open_play_participants(session_id, player_id, status, attendance_status)
-  values (p_session_id, v_user, 'joined', 'registered')
-  on conflict (session_id, player_id) do update set status = 'joined', attendance_status = 'registered', checked_in_at = null, joined_at = now();
-  select count(*) into v_joined from public.open_play_participants where session_id = p_session_id and status = 'joined';
-  if v_joined >= v_session.max_players then update public.open_play_sessions set status = 'full' where id = p_session_id; end if;
-  return 'joined';
+  values (p_session_id, v_user, ''joined'', ''registered'')
+  on conflict (session_id, player_id) do update set status = ''joined'', attendance_status = ''registered'', checked_in_at = null, joined_at = now();
+  select count(*) into v_joined from public.open_play_participants where session_id = p_session_id and status = ''joined'';
+  if v_joined >= v_session.max_players then update public.open_play_sessions set status = ''full'' where id = p_session_id; end if;
+  return ''joined'';
 end;
-$function$;
+';
 
 create or replace function public.leave_open_play_session(p_session_id uuid)
 returns void
 language plpgsql security definer set search_path = ''
-as $function$
+as '
 declare
   v_user uuid := (select auth.uid());
   v_session public.open_play_sessions%rowtype;
 begin
-  if v_user is null then raise exception 'Silakan login terlebih dahulu'; end if;
+  if v_user is null then raise exception ''Silakan login terlebih dahulu''; end if;
   select * into v_session from public.open_play_sessions where id = p_session_id for update;
-  if not found then raise exception 'Sesi mabar tidak ditemukan'; end if;
-  if v_session.host_id = v_user then raise exception 'Host tidak bisa keluar; batalkan sesi atau serahkan host terlebih dahulu'; end if;
-  if v_session.status not in ('open','full') then raise exception 'Sesi ini sudah ditutup'; end if;
+  if not found then raise exception ''Sesi mabar tidak ditemukan''; end if;
+  if v_session.host_id = v_user then raise exception ''Host tidak bisa keluar; batalkan sesi atau serahkan host terlebih dahulu''; end if;
+  if v_session.status not in (''open'',''full'') then raise exception ''Sesi ini sudah ditutup''; end if;
   update public.open_play_participants
-  set status = 'cancelled', attendance_status = 'cancelled', checked_in_at = null
-  where session_id = p_session_id and player_id = v_user and status = 'joined';
-  if not found then raise exception 'Kamu belum bergabung ke sesi ini'; end if;
-  update public.open_play_sessions set status = 'open' where id = p_session_id and status = 'full';
+  set status = ''cancelled'', attendance_status = ''cancelled'', checked_in_at = null
+  where session_id = p_session_id and player_id = v_user and status = ''joined'';
+  if not found then raise exception ''Kamu belum bergabung ke sesi ini''; end if;
+  update public.open_play_sessions set status = ''open'' where id = p_session_id and status = ''full'';
 end;
-$function$;
+';
 
 -- Return a short-lived one-time token; the raw token is never stored in the database.
 create or replace function public.create_open_play_checkin_token(p_session_id uuid)
 returns text
 language plpgsql security definer set search_path = ''
-as $function$
+as '
 declare
   v_user uuid := (select auth.uid());
   v_session public.open_play_sessions%rowtype;
   v_booking public.bookings%rowtype;
   v_token text := gen_random_uuid()::text || gen_random_uuid()::text;
 begin
-  if v_user is null then raise exception 'Silakan login terlebih dahulu'; end if;
+  if v_user is null then raise exception ''Silakan login terlebih dahulu''; end if;
   select * into v_session from public.open_play_sessions where id = p_session_id;
-  if not found then raise exception 'Sesi mabar tidak ditemukan'; end if;
+  if not found then raise exception ''Sesi mabar tidak ditemukan''; end if;
   select * into v_booking from public.bookings where id = v_session.booking_id;
   if not exists (
     select 1 from public.open_play_participants p
     where p.session_id = p_session_id and p.player_id = v_user
-      and p.status = 'joined' and p.attendance_status = 'registered'
-  ) then raise exception 'Hanya peserta yang belum check-in yang dapat membuat QR'; end if;
-  if now() < ((v_booking.booking_date + v_booking.start_time) at time zone 'Asia/Jakarta') - interval '3 hours'
-     or now() > ((v_booking.booking_date + v_booking.start_time) at time zone 'Asia/Jakarta')
-       + make_interval(hours => v_booking.duration_hours) + interval '2 hours' then
-    raise exception 'QR check-in hanya tersedia mendekati jadwal bermain'; end if;
+      and p.status = ''joined'' and p.attendance_status = ''registered''
+  ) then raise exception ''Hanya peserta yang belum check-in yang dapat membuat QR''; end if;
+  if now() < ((v_booking.booking_date + v_booking.start_time) at time zone ''Asia/Jakarta'') - interval ''3 hours''
+     or now() > ((v_booking.booking_date + v_booking.start_time) at time zone ''Asia/Jakarta'')
+       + make_interval(hours => v_booking.duration_hours) + interval ''2 hours'' then
+    raise exception ''QR check-in hanya tersedia mendekati jadwal bermain''; end if;
   insert into public.open_play_checkin_tokens(session_id, player_id, token_hash, expires_at)
-  values (p_session_id, v_user, encode(public.digest(v_token, 'sha256'), 'hex'), now() + interval '2 minutes');
+  values (p_session_id, v_user, encode(public.digest(v_token, ''sha256''), ''hex''), now() + interval ''2 minutes'');
   return v_token;
 end;
-$function$;
+';
 
 -- Booth operator must be an active member of the venue where the session is booked.
 create or replace function public.redeem_open_play_checkin_token(p_token text)
 returns table(player_id uuid, player_name text, session_id uuid, session_title text, checked_in_at timestamptz)
 language plpgsql security definer set search_path = ''
-as $function$
+as '
 declare
   v_user uuid := (select auth.uid());
   v_token public.open_play_checkin_tokens%rowtype;
@@ -386,48 +386,48 @@ declare
   v_player_name text;
   v_now timestamptz := now();
 begin
-  if v_user is null then raise exception 'Silakan login sebagai petugas venue'; end if;
-  if p_token is null or length(p_token) < 32 or length(p_token) > 100 then raise exception 'QR tidak valid'; end if;
+  if v_user is null then raise exception ''Silakan login sebagai petugas venue''; end if;
+  if p_token is null or length(p_token) < 32 or length(p_token) > 100 then raise exception ''QR tidak valid''; end if;
 
   select t.* into v_token
   from public.open_play_checkin_tokens t
-  where t.token_hash = encode(public.digest(p_token, 'sha256'), 'hex')
+  where t.token_hash = encode(public.digest(p_token, ''sha256''), ''hex'')
   for update;
-  if not found then raise exception 'QR tidak valid atau sudah kedaluwarsa'; end if;
-  if v_token.used_at is not null then raise exception 'QR ini sudah pernah digunakan'; end if;
-  if v_token.expires_at <= v_now then raise exception 'QR sudah kedaluwarsa. Minta pemain membuat QR baru'; end if;
+  if not found then raise exception ''QR tidak valid atau sudah kedaluwarsa''; end if;
+  if v_token.used_at is not null then raise exception ''QR ini sudah pernah digunakan''; end if;
+  if v_token.expires_at <= v_now then raise exception ''QR sudah kedaluwarsa. Minta pemain membuat QR baru''; end if;
 
   select * into v_session from public.open_play_sessions where id = v_token.session_id;
   select * into v_booking from public.bookings where id = v_session.booking_id;
   if not exists (
     select 1 from public.venue_members vm
     where vm.venue_id = v_session.venue_id and vm.user_id = v_user and vm.is_active
-  ) then raise exception 'Akun petugas tidak memiliki akses ke venue sesi ini'; end if;
-  if v_session.status not in ('open','full') then raise exception 'Sesi ini sudah ditutup'; end if;
-  if v_now < ((v_booking.booking_date + v_booking.start_time) at time zone 'Asia/Jakarta') - interval '3 hours'
-     or v_now > ((v_booking.booking_date + v_booking.start_time) at time zone 'Asia/Jakarta')
-       + make_interval(hours => v_booking.duration_hours) + interval '2 hours' then
-    raise exception 'Di luar jendela waktu check-in'; end if;
+  ) then raise exception ''Akun petugas tidak memiliki akses ke venue sesi ini''; end if;
+  if v_session.status not in (''open'',''full'') then raise exception ''Sesi ini sudah ditutup''; end if;
+  if v_now < ((v_booking.booking_date + v_booking.start_time) at time zone ''Asia/Jakarta'') - interval ''3 hours''
+     or v_now > ((v_booking.booking_date + v_booking.start_time) at time zone ''Asia/Jakarta'')
+       + make_interval(hours => v_booking.duration_hours) + interval ''2 hours'' then
+    raise exception ''Di luar jendela waktu check-in''; end if;
   if not exists (
     select 1 from public.open_play_participants p
-    where p.session_id = v_token.session_id and p.player_id = v_token.player_id and p.status = 'joined'
-      and p.attendance_status = 'registered'
-  ) then raise exception 'Peserta tidak terdaftar atau sudah check-in'; end if;
+    where p.session_id = v_token.session_id and p.player_id = v_token.player_id and p.status = ''joined''
+      and p.attendance_status = ''registered''
+  ) then raise exception ''Peserta tidak terdaftar atau sudah check-in''; end if;
 
-  select coalesce(nullif(trim(p.display_name),''), split_part(coalesce(u.email,'pemain'),'@',1))
+  select coalesce(nullif(trim(p.display_name),''''), split_part(coalesce(u.email,''pemain''),''@'',1))
   into v_player_name from auth.users u left join public.profiles p on p.id = u.id
   where u.id = v_token.player_id;
 
   insert into public.open_play_checkins(session_id, venue_id, player_id, checked_in_by, method)
-  values (v_token.session_id, v_session.venue_id, v_token.player_id, v_user, 'booth_qr');
+  values (v_token.session_id, v_session.venue_id, v_token.player_id, v_user, ''booth_qr'');
   update public.open_play_participants
-  set attendance_status = 'checked_in', checked_in_at = v_now
+  set attendance_status = ''checked_in'', checked_in_at = v_now
   where session_id = v_token.session_id and player_id = v_token.player_id;
   update public.open_play_checkin_tokens set used_at = v_now where id = v_token.id;
 
   return query select v_token.player_id, v_player_name, v_session.id, v_session.title, v_now;
 end;
-$function$;
+';
 
 revoke all on function public.is_active_venue_member(uuid) from public;
 revoke all on function public.can_manage_venue_members(uuid) from public;
