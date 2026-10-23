@@ -1,4 +1,4 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/+esm'
 
 // Public client credentials only. Never put a service_role/secret key in frontend code.
 const SUPABASE_URL = 'https://fbkgiebuozyflsbkneaf.supabase.co'
